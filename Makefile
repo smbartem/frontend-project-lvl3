@@ -1,8 +1,10 @@
-install: 
-	npm install
+install: install-deps
+
+install-deps:
+	npm ci
 
 lint:
 	npx eslint .
 
-publish:
-	npm publish --dry-run
+start:
+	npm start
