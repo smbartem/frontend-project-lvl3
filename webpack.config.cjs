@@ -22,4 +22,8 @@ module.exports = {
       template: 'template.html',
     }),
   ],
+  devServer: {
+    contentBase: './src',
+    port: 8080,
+  },
 };
