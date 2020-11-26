@@ -31,7 +31,7 @@ const app = () => {
   const state = {
     state: 'editing',
     validationState: 'valid',
-    errors: [],
+    requestErrors: null,
     validationErr: null,
     links: [],
     data: {
@@ -44,12 +44,18 @@ const app = () => {
 
   const makeHttpRequests = (links) => {
     axios.all(links.map((url) => axios.get(url)))
-      .then((results) => results.forEach((elem, index) => {
-        const content = parseRSS(elem.data);
-        watchedState.data.feeds[index] = content.feed;
-        watchedState.data.posts[index] = content.posts;
-      }))
-      .catch((error) => console.log(error));
+      .then((results) => {
+        results.forEach((elem, index) => {
+          const content = parseRSS(elem.data);
+          watchedState.data.feeds[index] = content.feed;
+          watchedState.data.posts[index] = content.posts;
+        });
+        watchedState.state = 'success';
+      })
+      .catch((error) => {
+        watchedState.requestErrors = error;
+        watchedState.state = 'unsuccess';
+      });
   };
 
   docElements.form.addEventListener('submit', (e) => {
@@ -65,9 +71,14 @@ const app = () => {
       watchedState.validationErr = null;
       watchedState.state = 'sending';
       makeHttpRequests(watchedState.links);
-      watchedState.state = 'success';
     }
   });
 };
 
 export default app;
+
+/*
+необходимо добавить то, что, когда добавляется ссылка в которой нет рсс элемента она все-равно
+проходит валидацию и оказывается в списке ссылок, нужно подумать как правильно добавлять ссылки
+или убирать битую из списка
+*/
