@@ -62,6 +62,7 @@ export default (state, docElements) => {
         generateFeeds(state.data.feeds, docElements.feeds);
         generatePosts(state.data.posts, docElements.posts);
         docElements.feedback.classList.add('text-success');
+        docElements.feedback.classList.remove('text-danger');
         docElements.feedback.textContent = 'Rss has been loaded';
         docElements.input.value = '';
         docElements.input.focus();

@@ -42,15 +42,22 @@ const app = () => {
 
   const watchedState = watcher(state, docElements);
 
-  const makeHttpRequests = (links) => {
-    axios.all(links.map((url) => axios.get(url)))
-      .then((results) => {
-        results.forEach((elem, index) => {
-          const content = parseRSS(elem.data);
-          watchedState.data.feeds[index] = content.feed;
-          watchedState.data.posts[index] = content.posts;
-        });
-        watchedState.state = 'success';
+  const makeHttpRequests = (newLink, links) => {
+    axios.get(`https://api.allorigins.win/get?url=${encodeURIComponent(newLink)}`)
+      .then((result) => {
+        parseRSS(result.data.contents);
+      })
+      .then(() => {
+        watchedState.links.push(newLink);
+        axios.all(links.map((url) => axios.get(`https://api.allorigins.win/get?url=${encodeURIComponent(url)}`)))
+          .then((results) => {
+            results.forEach((elem, index) => {
+              const content = parseRSS(elem.data.contents);
+              watchedState.data.feeds[index + 1] = content.feed;
+              watchedState.data.posts[index + 1] = content.posts;
+            });
+            watchedState.state = 'success';
+          });
       })
       .catch((error) => {
         watchedState.requestErrors = error;
@@ -67,18 +74,11 @@ const app = () => {
       watchedState.validationErr = validationErr;
     } else {
       watchedState.validationState = 'valid';
-      watchedState.links.push(docElements.input.value);
       watchedState.validationErr = null;
       watchedState.state = 'sending';
-      makeHttpRequests(watchedState.links);
+      makeHttpRequests(docElements.input.value, watchedState.links);
     }
   });
 };
 
 export default app;
-
-/*
-необходимо добавить то, что, когда добавляется ссылка в которой нет рсс элемента она все-равно
-проходит валидацию и оказывается в списке ссылок, нужно подумать как правильно добавлять ссылки
-или убирать битую из списка
-*/
