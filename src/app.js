@@ -2,14 +2,20 @@
 import axios from 'axios';
 import checkFormValidity from './checkFormValidity.js';
 import watcher from './watcher.js';
+import initLanguage from './locales/initLang.js';
 
 const docElements = {
+  title: document.querySelector('h1'),
+  lead: document.querySelector('.lead'),
+  exampleLink: document.querySelector('.text-muted'),
   form: document.querySelector('.rss-form'),
   feedback: document.querySelector('.feedback'),
   submitButton: document.querySelector('.btn'),
   feeds: document.querySelector('.feeds'),
   input: document.querySelector('.form-control'),
   posts: document.querySelector('.posts'),
+  en: document.querySelector('.en'),
+  ru: document.querySelector('.ru'),
 };
 
 const parseRSS = (data) => {
@@ -39,9 +45,8 @@ const app = () => {
       posts: {},
     },
   };
-
+  initLanguage('en', docElements);
   const watchedState = watcher(state, docElements);
-
   const makeHttpRequests = (newLink, links) => {
     axios.get(`https://api.allorigins.win/get?url=${encodeURIComponent(newLink)}`)
       .then((result) => {
@@ -53,8 +58,8 @@ const app = () => {
           .then((results) => {
             results.forEach((elem, index) => {
               const content = parseRSS(elem.data.contents);
-              watchedState.data.feeds[index + 1] = content.feed;
-              watchedState.data.posts[index + 1] = content.posts;
+              watchedState.data.feeds[index] = content.feed;
+              watchedState.data.posts[index] = content.posts;
             });
             watchedState.state = 'success';
           });
@@ -78,6 +83,22 @@ const app = () => {
       watchedState.state = 'sending';
       makeHttpRequests(docElements.input.value, watchedState.links);
     }
+  });
+  docElements.ru.addEventListener('click', (e) => {
+    e.preventDefault();
+    initLanguage('ru', docElements);
+    docElements.ru.classList.add('text-secondary');
+    docElements.ru.classList.remove('text-white');
+    docElements.en.classList.remove('text-secondary');
+    docElements.en.classList.add('text-white');
+  });
+  docElements.en.addEventListener('click', (e) => {
+    e.preventDefault();
+    initLanguage('en', docElements);
+    docElements.en.classList.add('text-secondary');
+    docElements.en.classList.remove('text-white');
+    docElements.ru.classList.remove('text-secondary');
+    docElements.ru.classList.add('text-white');
   });
 };
 

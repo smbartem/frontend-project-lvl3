@@ -2,10 +2,11 @@
 /* eslint-disable no-param-reassign */
 import onChange from 'on-change';
 import _ from 'lodash';
+import i18next from 'i18next';
 
 const generateFeeds = (feeds, insertPlace) => {
   const title = document.createElement('h2');
-  title.textContent = 'Feeds';
+  title.textContent = i18next.t('feeds');
   const list = document.createElement('ul');
   list.classList.add('list-group', 'mb-5');
   _.values(feeds).forEach((el) => {
@@ -26,7 +27,7 @@ const generateFeeds = (feeds, insertPlace) => {
 
 const generatePosts = (posts, insertPlace) => {
   const title = document.createElement('h2');
-  title.textContent = 'Posts';
+  title.textContent = i18next.t('posts');
   const list = document.createElement('ul');
   list.classList.add('list-group');
   _.values(posts).reverse().flat(Infinity).forEach((el) => {
@@ -63,14 +64,14 @@ export default (state, docElements) => {
         generatePosts(state.data.posts, docElements.posts);
         docElements.feedback.classList.add('text-success');
         docElements.feedback.classList.remove('text-danger');
-        docElements.feedback.textContent = 'Rss has been loaded';
+        docElements.feedback.textContent = i18next.t('succeed');
         docElements.input.value = '';
         docElements.input.focus();
         value = 'editing';
       }
       if (value === 'unsuccess') {
         docElements.feedback.classList.add('text-danger');
-        docElements.feedback.textContent = 'This source doesn\'t contain valid rss';
+        docElements.feedback.textContent = i18next.t('downloadError');
       }
     }
   });
