@@ -1,5 +1,6 @@
 /* eslint-disable no-undef */
 import axios from 'axios';
+import _ from 'lodash';
 import checkFormValidity from './checkFormValidity.js';
 import watcher from './watcher.js';
 import initLanguage from './locales/initLang.js';
@@ -41,28 +42,53 @@ const app = () => {
     validationErr: null,
     links: [],
     data: {
+      linksId: {},
       feeds: {},
       posts: {},
     },
   };
   initLanguage('en', docElements);
+
   const watchedState = watcher(state, docElements);
-  const makeHttpRequests = (newLink, links) => {
-    axios.get(`https://api.allorigins.win/get?url=${encodeURIComponent(newLink)}`)
+
+  const downLoadContent = (newLink, urls) => {
+    const proxy = 'https://api.allorigins.win/get?url=';
+    const updatePosts = (links) => {
+      axios.all(links.map((url) => axios.get(`${proxy}${encodeURIComponent(url)}`)))
+        .then((results) => results.map((elem, index) => {
+          const content = parseRSS(elem.data.contents);
+          const rObj = {};
+          rObj[index] = content.posts;
+          return rObj;
+        }))
+        .then((results) => {
+          const allDifference = results.map((elem) => {
+            const [key, value] = _.toPairs(elem).flat(Infinity);
+            const difference = _.difference(value, state.data.posts[key]);
+            if (difference.length > 0) {
+              watchedState.data.posts[key] = value;
+            }
+            return difference;
+          });
+          if (allDifference.flat(Infinity).length > 0) {
+            watchedState.state = 'update';
+            console.log('start update');
+          }
+          setTimeout(() => updatePosts(links), 5000);
+        });
+    };
+    axios.get(`${proxy}${encodeURIComponent(newLink)}`)
       .then((result) => {
-        parseRSS(result.data.contents);
+        const content = parseRSS(result.data.contents);
+        const index = _.keys(state.data.linksId).length;
+        watchedState.data.linksId[index] = newLink;
+        watchedState.data.feeds[index] = content.feed;
+        watchedState.data.posts[index] = content.posts;
+        watchedState.state = 'success';
+        watchedState.links.push(newLink);
       })
       .then(() => {
-        watchedState.links.push(newLink);
-        axios.all(links.map((url) => axios.get(`https://api.allorigins.win/get?url=${encodeURIComponent(url)}`)))
-          .then((results) => {
-            results.forEach((elem, index) => {
-              const content = parseRSS(elem.data.contents);
-              watchedState.data.feeds[index] = content.feed;
-              watchedState.data.posts[index] = content.posts;
-            });
-            watchedState.state = 'success';
-          });
+        updatePosts(urls);
       })
       .catch((error) => {
         watchedState.requestErrors = error;
@@ -81,7 +107,7 @@ const app = () => {
       watchedState.validationState = 'valid';
       watchedState.validationErr = null;
       watchedState.state = 'sending';
-      makeHttpRequests(docElements.input.value, watchedState.links);
+      downLoadContent(docElements.input.value, state.links);
     }
   });
   docElements.ru.addEventListener('click', (e) => {
