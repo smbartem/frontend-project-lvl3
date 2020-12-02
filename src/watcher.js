@@ -30,13 +30,39 @@ const generatePosts = (posts, insertPlace) => {
   title.textContent = i18next.t('posts');
   const list = document.createElement('ul');
   list.classList.add('list-group');
-  _.values(posts).reverse().flat(Infinity).forEach((el) => {
+  _.values(posts).reverse().flat(Infinity).forEach((el, index) => {
     const point = document.createElement('li');
-    point.classList.add('list-group-item');
+    point.classList.add('list-group-item', 'd-flex', 'justify-content-between');
+    point.innerHTML = `<div class="modal fade" id="modal${index}" tabindex="-1" aria-labelledby="exampleModal" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="exampleModalLabel">${el.titlePost}</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+        <p>${el.descriptionPost}</p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">${i18next.t('сloseButton')}</button>
+        </div>
+      </div>
+    </div>
+  </div>`;
     const post = document.createElement('a');
+    const previewBtn = document.createElement('button');
+    previewBtn.setAttribute('type', 'button');
+    previewBtn.classList.add('btn', 'btn-primary', 'btn-sm');
+    previewBtn.setAttribute('data-toggle', 'modal');
+    previewBtn.setAttribute('data-target', `#modal${index}`);
+    previewBtn.textContent = i18next.t('viewButton');
     post.textContent = el.titlePost;
     post.href = el.linkPost;
-    point.append(post);
+    post.classList.add('font-weight-bold');
+    point.prepend(previewBtn);
+    point.prepend(post);
     list.append(point);
   });
   insertPlace.innerHTML = '';
@@ -72,6 +98,9 @@ export default (state, docElements) => {
       if (value === 'unsuccess') {
         docElements.feedback.classList.add('text-danger');
         docElements.feedback.textContent = i18next.t('downloadError');
+      }
+      if (value === 'update') {
+        generatePosts(state.data.posts, docElements.posts);
       }
     }
   });

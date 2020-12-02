@@ -12,6 +12,8 @@ export default {
       succeed: 'RSS has been loaded',
       downloadError: 'This source doesn\'t contain valid RSS',
       notURL: 'This must be a valid URL',
+      viewButton: 'View',
+      сloseButton: 'Close',
     },
   },
   ru: {
@@ -27,6 +29,8 @@ export default {
       succeed: 'RSS загружен',
       downloadError: 'Должна быть валидная ссылка',
       notURL: 'Должна быть добавлена корректная ссылка',
+      viewButton: 'Смотреть',
+      сloseButton: 'Закрыть',
     },
   },
 };

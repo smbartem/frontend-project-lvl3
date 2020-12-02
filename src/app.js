@@ -11,7 +11,7 @@ const docElements = {
   exampleLink: document.querySelector('.text-muted'),
   form: document.querySelector('.rss-form'),
   feedback: document.querySelector('.feedback'),
-  submitButton: document.querySelector('.btn'),
+  submitButton: document.querySelector('.sub-btn'),
   feeds: document.querySelector('.feeds'),
   input: document.querySelector('.form-control'),
   posts: document.querySelector('.posts'),
@@ -29,7 +29,8 @@ const parseRSS = (data) => {
   const posts = [...items].map((el) => {
     const titlePost = el.querySelector('title').textContent;
     const linkPost = el.querySelector('link').textContent;
-    return { titlePost, linkPost };
+    const descriptionPost = el.querySelector('description').textContent;
+    return { titlePost, linkPost, descriptionPost };
   });
   return { feed, posts };
 };
@@ -51,7 +52,7 @@ const app = () => {
 
   const watchedState = watcher(state, docElements);
 
-  const downLoadContent = (newLink, urls) => {
+  const downloadContent = (newLink, urls) => {
     const proxy = 'https://api.allorigins.win/get?url=';
     const updatePosts = (links) => {
       axios.all(links.map((url) => axios.get(`${proxy}${encodeURIComponent(url)}`)))
@@ -72,7 +73,6 @@ const app = () => {
           });
           if (allDifference.flat(Infinity).length > 0) {
             watchedState.state = 'update';
-            console.log('start update');
           }
           setTimeout(() => updatePosts(links), 5000);
         });
@@ -107,7 +107,7 @@ const app = () => {
       watchedState.validationState = 'valid';
       watchedState.validationErr = null;
       watchedState.state = 'sending';
-      downLoadContent(docElements.input.value, state.links);
+      downloadContent(docElements.input.value, state.links);
     }
   });
   docElements.ru.addEventListener('click', (e) => {
