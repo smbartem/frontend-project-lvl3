@@ -68,6 +68,15 @@ const generatePosts = (posts, insertPlace) => {
   insertPlace.innerHTML = '';
   insertPlace.append(title);
   insertPlace.append(list);
+  const modalButtonsClose = insertPlace.querySelectorAll('[data-dismiss="modal"]');
+  modalButtonsClose.forEach((elem) => {
+    elem.addEventListener('click', (e) => {
+      const closestList = e.target.closest('li');
+      const postTitle = closestList.querySelector('a');
+      postTitle.classList.add('font-weight-normal');
+      postTitle.classList.remove('font-weight-bold');
+    });
+  });
 };
 
 export default (state, docElements) => {
