@@ -35,7 +35,7 @@ const parseRSS = (data) => {
   return { feed, posts };
 };
 
-const app = () => {
+const init = () => {
   const state = {
     state: 'editing',
     validationState: 'valid',
@@ -128,4 +128,4 @@ const app = () => {
   });
 };
 
-export default app;
+export default init;

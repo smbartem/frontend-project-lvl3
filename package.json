@@ -6,7 +6,8 @@
   "scripts": {
     "test": "jest --colors",
     "build": "webpack",
-    "start": "webpack serve"
+    "start": "webpack serve",
+    "production": "webpack --mode production"
   },
   "repository": {
     "type": "git",
