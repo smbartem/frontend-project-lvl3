@@ -22,7 +22,6 @@
   "bugs": {
     "url": "https://github.com/smbartem/frontend-project-lvl3/issues"
   },
-  "type": "module",
   "homepage": "https://github.com/smbartem/frontend-project-lvl3#readme",
   "dependencies": {
     "axios": "^0.21.0",

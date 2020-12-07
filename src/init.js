@@ -1,30 +1,17 @@
-/* eslint-disable no-undef */
+/* eslint no-param-reassign:
+["error", { "props": true, "ignorePropertyModificationsForRegex": ["watchedState"] }] */
 import axios from 'axios';
 import _ from 'lodash';
 import checkFormValidity from './checkFormValidity.js';
-import watcher from './watcher.js';
-import initLanguage from './locales/initLang.js';
-
-const docElements = {
-  title: document.querySelector('h1'),
-  lead: document.querySelector('.lead'),
-  exampleLink: document.querySelector('.text-muted'),
-  form: document.querySelector('.rss-form'),
-  feedback: document.querySelector('.feedback'),
-  submitButton: document.querySelector('.sub-btn'),
-  feeds: document.querySelector('.feeds'),
-  input: document.querySelector('.form-control'),
-  posts: document.querySelector('.posts'),
-  en: document.querySelector('.en'),
-  ru: document.querySelector('.ru'),
-};
+import watch from './watch.js';
+import initialRender from './locales/initLang.js';
 
 const parseRSS = (data) => {
   const parser = new DOMParser();
   const rssDataDocument = parser.parseFromString(data, 'text/xml');
-  const titleFeed = rssDataDocument.querySelector('title').textContent;
-  const descriptionFeed = rssDataDocument.querySelector('description').textContent;
-  const feed = { titleFeed, descriptionFeed };
+  const feedTitle = rssDataDocument.querySelector('title').textContent;
+  const feedDescription = rssDataDocument.querySelector('description').textContent;
+  const feed = { feedTitle, feedDescription };
   const items = rssDataDocument.querySelectorAll('item');
   const posts = [...items].map((el) => {
     const titlePost = el.querySelector('title').textContent;
@@ -35,84 +22,105 @@ const parseRSS = (data) => {
   return { feed, posts };
 };
 
+const downloadContent = (newLink, urls, watchedState) => {
+  const proxy = 'https://api.allorigins.win/get?url=';
+  axios.get(`${proxy}${encodeURIComponent(newLink)}`)
+    .then((result) => {
+      const content = parseRSS(result.data.contents);
+      watchedState.feed.data.links.push(newLink);
+      watchedState.feed.data.feeds.push(content.feed);
+      watchedState.feed.data.posts.push(content.posts);
+      watchedState.feed.state = 'success';
+    })
+    .catch((error) => {
+      watchedState.feed.requestErrors = error;
+      watchedState.feed.state = 'unsuccess';
+    });
+};
+
+// Насколько я понимаю, мое разделение функции не очень правильное,
+// нет ли необходимости начинать обновление, после загрузки ленты?
+const updatePosts = (links, watchedState) => {
+  const proxy = 'https://api.allorigins.win/get?url=';
+  const requests = links.map((url) => axios.get(`${proxy}${encodeURIComponent(url)}`)
+    .catch((error) => {
+      watchedState.feed.requestErrors = error;
+      watchedState.feed.state = 'unsuccess';
+    }));
+  Promise.all(requests)
+    .then((results) => results.map((elem, index) => {
+      const content = parseRSS(elem.data.contents);
+      const rObj = {};
+      rObj[index] = content.posts;
+      return rObj;
+    }))
+    .then((results) => {
+      const allDifference = results.map((elem) => {
+        const [key, value] = _.toPairs(elem).flat(Infinity);
+        const difference = _.difference(value, watchedState.feed.data.posts[key]);
+        if (difference.length > 0) {
+          watchedState.feed.data.posts[key] = value;
+        }
+        return difference;
+      });
+      if (allDifference.flat(Infinity).length > 0) {
+        watchedState.feed.state = 'update';
+      }
+      setTimeout(() => updatePosts(links, watchedState), 5000);
+    });
+};
+
 const init = () => {
+  const docElements = {
+    title: document.querySelector('h1'),
+    lead: document.querySelector('.lead'),
+    exampleLink: document.querySelector('.text-muted'),
+    form: document.querySelector('.rss-form'),
+    feedback: document.querySelector('.feedback'),
+    submitButton: document.querySelector('.sub-btn'),
+    feeds: document.querySelector('.feeds'),
+    input: document.querySelector('.form-control'),
+    posts: document.querySelector('.posts'),
+    en: document.querySelector('.en'),
+    ru: document.querySelector('.ru'),
+  };
   const state = {
-    state: 'editing',
-    validationState: 'valid',
-    requestErrors: null,
-    validationErr: null,
-    links: [],
-    data: {
-      linksId: {},
-      feeds: {},
-      posts: {},
+    form: {
+      validationState: 'valid',
+      validationErr: null,
+    },
+    feed: {
+      state: 'editing',
+      requestErrors: null,
+      data: {
+        links: [],
+        feeds: [],
+        posts: [],
+      },
     },
   };
-  initLanguage('en', docElements);
+  initialRender('en', docElements);
 
-  const watchedState = watcher(state, docElements);
-
-  const downloadContent = (newLink, urls) => {
-    const proxy = 'https://api.allorigins.win/get?url=';
-    const updatePosts = (links) => {
-      axios.all(links.map((url) => axios.get(`${proxy}${encodeURIComponent(url)}`)))
-        .then((results) => results.map((elem, index) => {
-          const content = parseRSS(elem.data.contents);
-          const rObj = {};
-          rObj[index] = content.posts;
-          return rObj;
-        }))
-        .then((results) => {
-          const allDifference = results.map((elem) => {
-            const [key, value] = _.toPairs(elem).flat(Infinity);
-            const difference = _.difference(value, state.data.posts[key]);
-            if (difference.length > 0) {
-              watchedState.data.posts[key] = value;
-            }
-            return difference;
-          });
-          if (allDifference.flat(Infinity).length > 0) {
-            watchedState.state = 'update';
-          }
-          setTimeout(() => updatePosts(links), 5000);
-        });
-    };
-    axios.get(`${proxy}${encodeURIComponent(newLink)}`)
-      .then((result) => {
-        const content = parseRSS(result.data.contents);
-        const index = _.keys(state.data.linksId).length;
-        watchedState.data.linksId[index] = newLink;
-        watchedState.data.feeds[index] = content.feed;
-        watchedState.data.posts[index] = content.posts;
-        watchedState.state = 'success';
-        watchedState.links.push(newLink);
-      })
-      .then(() => {
-        updatePosts(urls);
-      })
-      .catch((error) => {
-        watchedState.requestErrors = error;
-        watchedState.state = 'unsuccess';
-      });
-  };
+  const watchedState = watch(state, docElements);
 
   docElements.form.addEventListener('submit', (e) => {
     e.preventDefault();
-    const urlList = watchedState.links.map((el) => el);
-    const validationErr = checkFormValidity(docElements.input.value, urlList);
+    const formData = new FormData(docElements.form);
+    const validationErr = checkFormValidity(formData.get('url'), state.feed.data.links);
     if (validationErr) {
-      watchedState.validationState = 'invalid';
-      watchedState.validationErr = validationErr;
+      watchedState.form.validationState = 'invalid';
+      watchedState.form.validationErr = validationErr;
     } else {
-      watchedState.validationState = 'valid';
-      watchedState.validationErr = null;
-      watchedState.state = 'sending';
-      downloadContent(docElements.input.value, state.links);
+      watchedState.form.validationState = 'valid';
+      watchedState.form.validationErr = null;
+      watchedState.feed.state = 'sending';
+      downloadContent(formData.get('url'), state.feed.data.links, watchedState);
+      updatePosts(state.feed.data.links, watchedState);
     }
   });
   docElements.ru.addEventListener('click', (e) => {
     e.preventDefault();
-    initLanguage('ru', docElements);
+    initialRender('ru', docElements);
     docElements.ru.classList.add('text-secondary');
     docElements.ru.classList.remove('text-white');
     docElements.en.classList.remove('text-secondary');
@@ -120,7 +128,7 @@ const init = () => {
   });
   docElements.en.addEventListener('click', (e) => {
     e.preventDefault();
-    initLanguage('en', docElements);
+    initialRender('en', docElements);
     docElements.en.classList.add('text-secondary');
     docElements.en.classList.remove('text-white');
     docElements.ru.classList.remove('text-secondary');
