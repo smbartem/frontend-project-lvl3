@@ -8,7 +8,7 @@ export default (url, urlList) => {
     .notOneOf(urlList, i18next.t('alreadyExists'));
   try {
     schema.validateSync(url);
-    return false;
+    return null;
   } catch (error) {
     return error.message;
   }

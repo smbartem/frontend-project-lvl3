@@ -1,6 +1,3 @@
-/* eslint no-param-reassign:
-["error", { "props": true, "ignorePropertyModificationsForRegex":
-["container", "docElements", "watchedState"] }] */
 import onChange from 'on-change';
 import i18next from 'i18next';
 
@@ -33,24 +30,6 @@ const generatePosts = (posts, container) => {
   posts.reverse().flat(Infinity).forEach((el, index) => {
     const point = document.createElement('li');
     point.classList.add('list-group-item', 'd-flex', 'justify-content-between');
-    point.innerHTML = `<div class="modal fade" id="modal${index}" tabindex="-1" aria-labelledby="exampleModal" aria-hidden="true">
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title" id="exampleModalLabel">${el.titlePost}</h5>
-          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-            <span aria-hidden="true">&times;</span>
-          </button>
-        </div>
-        <div class="modal-body">
-        <p>${el.descriptionPost}</p>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-dismiss="modal">${i18next.t('сloseButton')}</button>
-        </div>
-      </div>
-    </div>
-  </div>`;
     const post = document.createElement('a');
     const previewBtn = document.createElement('button');
     previewBtn.setAttribute('type', 'button');
@@ -63,62 +42,87 @@ const generatePosts = (posts, container) => {
     post.classList.add('font-weight-bold');
     point.prepend(previewBtn);
     point.prepend(post);
-    list.append(point);
+    list.prepend(point);
   });
   container.innerHTML = '';
-  container.append(title);
-  container.append(list);
-  const modalButtonsClose = container.querySelectorAll('[data-dismiss="modal"]');
+  container.prepend(list);
+  container.prepend(title);
+};
+
+const handleForm = (formValidationError, docElements) => {
+  if (formValidationError === null) {
+    docElements.input.classList.remove('is-invalid');
+    docElements.feedback.classList.remove('text-danger');
+    docElements.feedback.textContent = formValidationError;
+  } else {
+    docElements.input.classList.add('is-invalid');
+    docElements.feedback.classList.add('text-danger');
+    docElements.feedback.textContent = formValidationError;
+  }
+};
+
+const handleFeeds = (watchedState, state, feedStatus, docElements) => {
+  switch (feedStatus) {
+    case 'success':
+      generateFeeds(state.feedDownload.feeds, docElements.feeds);
+      generatePosts(state.feedDownload.posts, docElements.posts);
+      docElements.feedback.classList.add('text-success');
+      docElements.feedback.classList.remove('text-danger');
+      docElements.feedback.textContent = i18next.t('succeed');
+      docElements.input.value = '';
+      docElements.input.focus();
+      break;
+    case 'failed':
+      docElements.feedback.classList.add('text-danger');
+      docElements.feedback.textContent = i18next.t('downloadError');
+      break;
+    case 'update':
+      generateFeeds(state.feedDownload.feeds, docElements.feeds);
+      generatePosts(state.feedDownload.posts, docElements.posts);
+      break;
+    case 'sending':
+      break;
+    case 'unsuccess':
+      break;
+    case 'editing':
+      break;
+    default:
+      throw new Error(`Unknown feed status: '${feedStatus}'!`);
+  }
+};
+
+const handleModalWindow = (docElements, state, value) => {
+  docElements.modalWindow.id = `modal${value}`;
+  docElements.modalWindowTitle.textContent = state.feedDownload.posts[0][value].titlePost;
+  docElements.modalWindowContent.textContent = state.feedDownload.posts[0][value]
+    .descriptionPost;
+  const modalButtonsClose = docElements.modalWindow.querySelectorAll('[data-dismiss="modal"]');
   modalButtonsClose.forEach((elem) => {
-    elem.addEventListener('click', (e) => {
-      const closestList = e.target.closest('li');
-      const postTitle = closestList.querySelector('a');
+    elem.addEventListener('click', () => {
+      const openedLink = docElements.posts.querySelector(`[data-target="#modal${value}"]`);
+      const postTitle = openedLink.previousSibling;
       postTitle.classList.add('font-weight-normal');
       postTitle.classList.remove('font-weight-bold');
     });
   });
 };
 
-const handleForm = (formValidationError, docElements) => {
-  if (formValidationError !== null) {
-    docElements.input.classList.add('is-invalid');
-    docElements.feedback.classList.add('text-danger');
-    docElements.feedback.textContent = formValidationError;
-  }
-  if (formValidationError === null) {
-    docElements.input.classList.remove('is-invalid');
-    docElements.feedback.classList.remove('text-danger');
-    docElements.feedback.textContent = formValidationError;
-  }
-};
-
-const handleFeeds = (watchedState, state, feedState, docElements) => {
-  if (feedState === 'success') {
-    generateFeeds(state.feed.data.feeds, docElements.feeds);
-    generatePosts(state.feed.data.posts, docElements.posts);
-    docElements.feedback.classList.add('text-success');
-    docElements.feedback.classList.remove('text-danger');
-    docElements.feedback.textContent = i18next.t('succeed');
-    docElements.input.value = '';
-    docElements.input.focus();
-    watchedState.feed.state = 'editing';
-  }
-  if (feedState === 'unsuccess') {
-    docElements.feedback.classList.add('text-danger');
-    docElements.feedback.textContent = i18next.t('downloadError');
-  }
-  if (feedState === 'update') {
-    generatePosts(state.feed.data.posts, docElements.posts);
-  }
-};
-
 export default (state, docElements) => {
+  // Исходя из замечания:
+  // Необходимо изменить название или сделать три разных обработчика на каждый вариант?
   const watchedState = onChange(state, (path, value) => {
-    if (path === 'form.validationErr') {
-      handleForm(value, docElements);
-    }
-    if (path === 'feed.state') {
-      handleFeeds(watchedState, state, value, docElements);
+    switch (path) {
+      case 'form.error':
+        handleForm(value, docElements);
+        break;
+      case 'feedDownload.status':
+        handleFeeds(watchedState, state, value, docElements);
+        break;
+      case 'feedDownload.modalLinkNumber':
+        handleModalWindow(docElements, state, value);
+        break;
+      default:
+        break;
     }
   });
   return watchedState;
