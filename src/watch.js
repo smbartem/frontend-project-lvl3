@@ -27,7 +27,8 @@ const generatePosts = (posts, container) => {
   title.textContent = i18next.t('posts');
   const list = document.createElement('ul');
   list.classList.add('list-group');
-  posts.reverse().flat(Infinity).forEach((el, index) => {
+  const postsListReverse = [...posts].reverse();
+  postsListReverse.flat(Infinity).forEach((el, index) => {
     const point = document.createElement('li');
     point.classList.add('list-group-item', 'd-flex', 'justify-content-between');
     const post = document.createElement('a');
@@ -42,7 +43,7 @@ const generatePosts = (posts, container) => {
     post.classList.add('font-weight-bold');
     point.prepend(previewBtn);
     point.prepend(post);
-    list.prepend(point);
+    list.append(point);
   });
   container.innerHTML = '';
   container.prepend(list);
@@ -77,12 +78,13 @@ const handleFeeds = (watchedState, state, feedStatus, docElements) => {
       docElements.feedback.textContent = i18next.t('downloadError');
       break;
     case 'update':
-      generateFeeds(state.feedDownload.feeds, docElements.feeds);
       generatePosts(state.feedDownload.posts, docElements.posts);
       break;
     case 'sending':
       break;
     case 'unsuccess':
+      docElements.feedback.classList.add('text-danger');
+      docElements.feedback.textContent = i18next.t('downloadError');
       break;
     case 'editing':
       break;
@@ -118,7 +120,7 @@ export default (state, docElements) => {
       case 'feedDownload.status':
         handleFeeds(watchedState, state, value, docElements);
         break;
-      case 'feedDownload.modalLinkNumber':
+      case 'feedDownload.modalPostNumber':
         handleModalWindow(docElements, state, value);
         break;
       default:

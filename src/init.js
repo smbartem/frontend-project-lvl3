@@ -20,54 +20,29 @@ const parseRSS = (data) => {
   return { feed, posts };
 };
 
-const downloadContent = (newLink, urls, watchedState) => {
+const downloadContent = (newLink) => {
   const proxy = 'https://api.allorigins.win/get?url=';
-  return axios.get(`${proxy}${encodeURIComponent(newLink)}`)
-    .then((result) => {
-      const content = parseRSS(result.data.contents);
-      watchedState.feedDownload.links.push(newLink);
-      watchedState.feedDownload.feeds.push(content.feed);
-      watchedState.feedDownload.posts.push(content.posts);
-      watchedState.feedDownload.status = 'success';
-      watchedState.feedDownload.status = 'editing';
-    });
+  return axios.get(`${proxy}${encodeURIComponent(newLink)}`);
 };
 
-// Мы пришли к плоской структуре хранения данных в стейте, новые посты добавляются
-// просто сверху в ленте, либо туда же, где и предыдущие посты от данной ссылки?
-// Если второй вариант, поясните, пожалуйста, чуть подробнее замечание к функции
-// обновления постов.
-
-const updatePosts = (links, watchedState) => {
+const updatePosts = (links, watchedState, state) => {
   const proxy = 'https://api.allorigins.win/get?url=';
   const timeout = 5000;
-  const requests = links.map((url) => axios.get(`${proxy}${encodeURIComponent(url)}`)
+  const requests = links.map((url, index) => axios.get(`${proxy}${encodeURIComponent(url)}`)
+    .then((result) => {
+      const newPosts = parseRSS(result.data.contents).posts;
+      const oldPosts = state.feedDownload.posts[index];
+      const difference = _.differenceWith(newPosts, oldPosts, _.isEqual);
+      return difference;
+    })
     .catch((error) => {
       watchedState.feed.requestErrors = error;
       watchedState.feed.state = 'unsuccess';
     }));
-  return Promise.all(requests)
-    .then((results) => results.map((elem, index) => {
-      const content = parseRSS(elem.data.contents);
-      const rObj = {};
-      rObj[index] = content.posts;
-      return rObj;
-    }))
-    .then((results) => {
-      const allDifference = results.map((elem) => {
-        const [key, value] = _.toPairs(elem).flat(Infinity);
-        const difference = _.difference(value, watchedState.feedDownload.posts[key]);
-        if (difference.length > 0) {
-          watchedState.feedDownload.posts[key] = value;
-        }
-        return difference;
-      });
-      if (allDifference.flat(Infinity).length > 0) {
-        watchedState.feedDownload.status = 'update';
-        watchedState.feedDownload.status = 'editing';
-      }
-      setTimeout(() => updatePosts(links, watchedState), timeout);
-    });
+  return Promise.all(requests).then((result) => {
+    setTimeout(() => updatePosts(links, watchedState, state), timeout);
+    return result;
+  });
 };
 
 const init = async () => {
@@ -88,6 +63,7 @@ const init = async () => {
     en: document.querySelector('.en'),
     ru: document.querySelector('.ru'),
   };
+
   const state = {
     form: {
       status: 'valid',
@@ -96,12 +72,13 @@ const init = async () => {
     feedDownload: {
       status: 'editing',
       error: null,
-      modalLinkNumber: null,
+      modalPostNumber: null,
       links: [],
       feeds: [],
       posts: [],
     },
   };
+
   initialRender('en', docElements).then(() => {
     const watchedState = watch(state, docElements);
 
@@ -116,26 +93,40 @@ const init = async () => {
         watchedState.form.status = 'valid';
         watchedState.form.error = null;
         watchedState.feedDownload.status = 'sending';
-        downloadContent(formData.get('url'), state.feedDownload.links, watchedState).then(() => {
-          updatePosts(state.feedDownload.links, watchedState)
-            .then(() => {
-              const modalButtons = docElements.posts.querySelectorAll('[data-toggle="modal"]');
-              modalButtons.forEach((elem) => {
-                elem.addEventListener('click', (event) => {
-                  watchedState.feedDownload.modalLinkNumber = event.target.getAttribute('data-target').slice(-1);
-                });
+        downloadContent(formData.get('url'))
+          .then((result) => {
+            const content = parseRSS(result.data.contents);
+            watchedState.feedDownload.links.push(formData.get('url'));
+            watchedState.feedDownload.feeds.push(content.feed);
+            watchedState.feedDownload.posts.push(content.posts);
+            watchedState.feedDownload.status = 'success';
+            watchedState.feedDownload.status = 'editing';
+          })
+          .then(() => updatePosts(state.feedDownload.links, watchedState, state)
+            .then((result) => {
+              result.forEach((elem, index) => {
+                if (elem.length > 0) {
+                  const difference = elem;
+                  const posts = state.feedDownload.posts[index];
+                  watchedState.feedDownload.posts[index] = [...difference, ...posts];
+                  watchedState.feedDownload.status = 'update';
+                  watchedState.feedDownload.status = 'editing';
+                }
               });
-            })
-            .catch((error) => {
-              watchedState.feedDownload.error = error;
-              watchedState.feedDownload.status = 'unsuccess';
-            });
-        }).catch((error) => {
-          watchedState.feedDownload.error = error;
-          watchedState.feedDownload.status = 'unsuccess';
-        });
+            }))
+          .catch((error) => {
+            watchedState.feedDownload.error = error;
+            watchedState.feedDownload.status = 'unsuccess';
+          });
       }
     });
+
+    docElements.posts.addEventListener('click', (event) => {
+      if (event.target.type === 'button') {
+        watchedState.feedDownload.modalPostNumber = event.target.getAttribute('data-target').slice(-1);
+      }
+    });
+
     docElements.ru.addEventListener('click', (e) => {
       e.preventDefault();
       initialRender('ru', docElements).then(() => {
@@ -147,6 +138,7 @@ const init = async () => {
         watchedState.feedDownload.status = 'editing';
       });
     });
+
     docElements.en.addEventListener('click', (e) => {
       e.preventDefault();
       initialRender('en', docElements).then(() => {
