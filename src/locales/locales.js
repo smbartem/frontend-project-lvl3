@@ -14,6 +14,7 @@ export default {
       notURL: 'This must be a valid URL',
       viewButton: 'View',
       сloseButton: 'Close',
+      openButton: 'Full article',
     },
   },
   ru: {
@@ -31,6 +32,7 @@ export default {
       notURL: 'Должна быть добавлена корректная ссылка',
       viewButton: 'Смотреть',
       сloseButton: 'Закрыть',
+      openButton: 'Перейти к статье',
     },
   },
 };

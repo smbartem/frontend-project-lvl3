@@ -35,11 +35,10 @@ const generatePosts = (posts, container) => {
     const previewBtn = document.createElement('button');
     previewBtn.setAttribute('type', 'button');
     previewBtn.classList.add('btn', 'btn-primary', 'btn-sm');
-    previewBtn.setAttribute('data-toggle', 'modal');
-    previewBtn.setAttribute('data-target', `#modal${index}`);
     previewBtn.textContent = i18next.t('viewButton');
     post.textContent = el.titlePost;
     post.href = el.linkPost;
+    post.id = `post-${index}`;
     post.classList.add('font-weight-bold');
     point.prepend(previewBtn);
     point.prepend(post);
@@ -48,6 +47,14 @@ const generatePosts = (posts, container) => {
   container.innerHTML = '';
   container.prepend(list);
   container.prepend(title);
+};
+
+const markViewedPosts = (container, state) => {
+  state.feedDownload.viewedPosts.forEach((el) => {
+    const post = container.querySelector(`[href="${el}"]`);
+    post.classList.add('font-weight-normal');
+    post.classList.remove('font-weight-bold');
+  });
 };
 
 const handleForm = (formValidationError, docElements) => {
@@ -62,11 +69,12 @@ const handleForm = (formValidationError, docElements) => {
   }
 };
 
-const handleFeeds = (watchedState, state, feedStatus, docElements) => {
+const handleFeeds = (state, feedStatus, docElements) => {
   switch (feedStatus) {
     case 'success':
       generateFeeds(state.feedDownload.feeds, docElements.feeds);
       generatePosts(state.feedDownload.posts, docElements.posts);
+      markViewedPosts(docElements.posts, state);
       docElements.feedback.classList.add('text-success');
       docElements.feedback.classList.remove('text-danger');
       docElements.feedback.textContent = i18next.t('succeed');
@@ -78,7 +86,9 @@ const handleFeeds = (watchedState, state, feedStatus, docElements) => {
       docElements.feedback.textContent = i18next.t('downloadError');
       break;
     case 'update':
+      generateFeeds(state.feedDownload.feeds, docElements.feeds);
       generatePosts(state.feedDownload.posts, docElements.posts);
+      markViewedPosts(docElements.posts, state);
       break;
     case 'sending':
       break;
@@ -94,34 +104,34 @@ const handleFeeds = (watchedState, state, feedStatus, docElements) => {
 };
 
 const handleModalWindow = (docElements, state, value) => {
-  docElements.modalWindow.id = `modal${value}`;
-  docElements.modalWindowTitle.textContent = state.feedDownload.posts[0][value].titlePost;
-  docElements.modalWindowContent.textContent = state.feedDownload.posts[0][value]
-    .descriptionPost;
-  const modalButtonsClose = docElements.modalWindow.querySelectorAll('[data-dismiss="modal"]');
-  modalButtonsClose.forEach((elem) => {
-    elem.addEventListener('click', () => {
-      const openedLink = docElements.posts.querySelector(`[data-target="#modal${value}"]`);
-      const postTitle = openedLink.previousSibling;
-      postTitle.classList.add('font-weight-normal');
-      postTitle.classList.remove('font-weight-bold');
-    });
-  });
+  if (value === 'open') {
+    docElements.modalWindowTitle.textContent = state.feedDownload.modal.title;
+    docElements.modalWindowContent.textContent = state.feedDownload.modal.description;
+    docElements.modalWindowOpenButton.href = state.feedDownload.modal.link;
+    docElements.modalWindow.classList.add('show', 'd-block');
+    docElements.modalWindowBackdrop.classList.add('modal-backdrop', 'fade', 'show');
+    docElements.body.classList.add('modal-open');
+  } else {
+    docElements.modalWindow.classList.remove('show', 'd-block');
+    docElements.modalWindowBackdrop.classList.remove('modal-backdrop', 'fade', 'show');
+    docElements.body.classList.remove('modal-open');
+  }
 };
 
 export default (state, docElements) => {
-  // Исходя из замечания:
-  // Необходимо изменить название или сделать три разных обработчика на каждый вариант?
   const watchedState = onChange(state, (path, value) => {
     switch (path) {
       case 'form.error':
         handleForm(value, docElements);
         break;
       case 'feedDownload.status':
-        handleFeeds(watchedState, state, value, docElements);
+        handleFeeds(state, value, docElements);
         break;
-      case 'feedDownload.modalPostNumber':
+      case 'feedDownload.modal.status':
         handleModalWindow(docElements, state, value);
+        break;
+      case 'feedDownload.viewedPosts':
+        markViewedPosts(docElements.posts, state);
         break;
       default:
         break;

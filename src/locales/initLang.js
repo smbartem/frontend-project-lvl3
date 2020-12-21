@@ -12,6 +12,7 @@ const initialRender = (language, docElements) => i18next.init({
   docElements.submitButton.textContent = i18next.t('button');
   docElements.exampleLink.textContent = i18next.t('exampleLink');
   docElements.modalWindowCloseButton.textContent = i18next.t('сloseButton');
+  docElements.modalWindowOpenButton.textContent = i18next.t('openButton');
 });
 
 export default initialRender;

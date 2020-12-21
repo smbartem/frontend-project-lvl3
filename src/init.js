@@ -47,6 +47,7 @@ const updatePosts = (links, watchedState, state) => {
 
 const init = async () => {
   const docElements = {
+    body: document.querySelector('body'),
     title: document.querySelector('h1'),
     lead: document.querySelector('.lead'),
     exampleLink: document.querySelector('.text-muted'),
@@ -60,6 +61,8 @@ const init = async () => {
     modalWindowTitle: document.querySelector('.modal-title'),
     modalWindowContent: document.querySelector('.modal-text'),
     modalWindowCloseButton: document.querySelector('.btn-secondary'),
+    modalWindowOpenButton: document.querySelector('.full-article'),
+    modalWindowBackdrop: document.querySelector('#modal-backdrop'),
     en: document.querySelector('.en'),
     ru: document.querySelector('.ru'),
   };
@@ -72,10 +75,16 @@ const init = async () => {
     feedDownload: {
       status: 'editing',
       error: null,
-      modalPostNumber: null,
       links: [],
       feeds: [],
       posts: [],
+      viewedPosts: [],
+      modal: {
+        status: 'closed',
+        title: '',
+        description: '',
+        link: '',
+      },
     },
   };
 
@@ -123,8 +132,26 @@ const init = async () => {
 
     docElements.posts.addEventListener('click', (event) => {
       if (event.target.type === 'button') {
-        watchedState.feedDownload.modalPostNumber = event.target.getAttribute('data-target').slice(-1);
+        const clickedPost = event.target.previousSibling;
+        if (state.feedDownload.viewedPosts.indexOf(clickedPost.href) === -1) {
+          watchedState.feedDownload.viewedPosts.push(clickedPost.href);
+        }
+        const clickedPostNum = clickedPost.id.split('-')[1];
+        const postsReverse = [...state.feedDownload.posts].reverse();
+        const title = postsReverse.flat(Infinity)[clickedPostNum].titlePost;
+        const description = postsReverse.flat(Infinity)[clickedPostNum].descriptionPost;
+        watchedState.feedDownload.modal.title = title;
+        watchedState.feedDownload.modal.description = description;
+        watchedState.feedDownload.modal.link = clickedPost.href;
+        watchedState.feedDownload.modal.status = 'open';
       }
+    });
+
+    docElements.modalWindowCloseButton.addEventListener('click', () => {
+      watchedState.feedDownload.modal.status = 'closed';
+      watchedState.feedDownload.modal.title = '';
+      watchedState.feedDownload.modal.description = '';
+      watchedState.feedDownload.modal.link = '';
     });
 
     docElements.ru.addEventListener('click', (e) => {
