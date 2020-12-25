@@ -49,8 +49,8 @@ const generatePosts = (posts, container) => {
   container.prepend(title);
 };
 
-const markViewedPosts = (container, state) => {
-  state.feedDownload.viewedPosts.forEach((el) => {
+const markViewedPosts = (container, watchedState) => {
+  watchedState.viewedPosts.forEach((el) => {
     const post = container.querySelector(`[href="${el}"]`);
     post.classList.add('font-weight-normal');
     post.classList.remove('font-weight-bold');
@@ -69,12 +69,12 @@ const handleForm = (formValidationError, docElements) => {
   }
 };
 
-const handleFeeds = (state, feedStatus, docElements) => {
+const handleFeeds = (watchedState, feedStatus, docElements) => {
   switch (feedStatus) {
     case 'success':
-      generateFeeds(state.feedDownload.feeds, docElements.feeds);
-      generatePosts(state.feedDownload.posts, docElements.posts);
-      markViewedPosts(docElements.posts, state);
+      generateFeeds(watchedState.feeds, docElements.feeds);
+      generatePosts(watchedState.posts, docElements.posts);
+      markViewedPosts(docElements.posts, watchedState);
       docElements.feedback.classList.add('text-success');
       docElements.feedback.classList.remove('text-danger');
       docElements.feedback.textContent = i18next.t('succeed');
@@ -86,9 +86,9 @@ const handleFeeds = (state, feedStatus, docElements) => {
       docElements.feedback.textContent = i18next.t('downloadError');
       break;
     case 'update':
-      generateFeeds(state.feedDownload.feeds, docElements.feeds);
-      generatePosts(state.feedDownload.posts, docElements.posts);
-      markViewedPosts(docElements.posts, state);
+      generateFeeds(watchedState.feeds, docElements.feeds);
+      generatePosts(watchedState.posts, docElements.posts);
+      markViewedPosts(docElements.posts, watchedState);
       break;
     case 'sending':
       break;
@@ -98,16 +98,21 @@ const handleFeeds = (state, feedStatus, docElements) => {
       break;
     case 'editing':
       break;
+    case 'none':
+      break;
     default:
       throw new Error(`Unknown feed status: '${feedStatus}'!`);
   }
 };
 
-const handleModalWindow = (docElements, state, value) => {
+const handleModalWindow = (docElements, watchedState, value) => {
   if (value === 'open') {
-    docElements.modalWindowTitle.textContent = state.feedDownload.modal.title;
-    docElements.modalWindowContent.textContent = state.feedDownload.modal.description;
-    docElements.modalWindowOpenButton.href = state.feedDownload.modal.link;
+    const postsReverse = [...watchedState.posts].reverse();
+    const title = postsReverse.flat(Infinity)[watchedState.modal.id].titlePost;
+    const description = postsReverse.flat(Infinity)[watchedState.modal.id].descriptionPost;
+    docElements.modalWindowTitle.textContent = title;
+    docElements.modalWindowContent.textContent = description;
+    docElements.modalWindowOpenButton.href = watchedState.modal.link;
     docElements.modalWindow.classList.add('show', 'd-block');
     docElements.modalWindowBackdrop.classList.add('modal-backdrop', 'fade', 'show');
     docElements.body.classList.add('modal-open');
@@ -125,13 +130,16 @@ export default (state, docElements) => {
         handleForm(value, docElements);
         break;
       case 'feedDownload.status':
-        handleFeeds(state, value, docElements);
+        handleFeeds(watchedState, value, docElements);
         break;
-      case 'feedDownload.modal.status':
-        handleModalWindow(docElements, state, value);
+      case 'feedUpdate.status':
+        handleFeeds(watchedState, value, docElements);
         break;
-      case 'feedDownload.viewedPosts':
-        markViewedPosts(docElements.posts, state);
+      case 'modal.status':
+        handleModalWindow(docElements, watchedState, value);
+        break;
+      case 'viewedPosts':
+        markViewedPosts(docElements.posts, watchedState);
         break;
       default:
         break;

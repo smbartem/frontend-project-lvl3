@@ -25,22 +25,30 @@ const downloadContent = (newLink) => {
   return axios.get(`${proxy}${encodeURIComponent(newLink)}`);
 };
 
-const updatePosts = (links, watchedState, state) => {
-  const proxy = 'https://api.allorigins.win/get?url=';
+const updatePosts = (watchedState) => {
   const timeout = 5000;
-  const requests = links.map((url, index) => axios.get(`${proxy}${encodeURIComponent(url)}`)
+  const requests = watchedState.links.map((url, index) => downloadContent(url)
     .then((result) => {
       const newPosts = parseRSS(result.data.contents).posts;
-      const oldPosts = state.feedDownload.posts[index];
+      const oldPosts = watchedState.posts[index];
       const difference = _.differenceWith(newPosts, oldPosts, _.isEqual);
       return difference;
     })
     .catch((error) => {
-      watchedState.feed.requestErrors = error;
-      watchedState.feed.state = 'unsuccess';
+      watchedState.feedUpdate.error = error;
+      watchedState.feedUpdate.status = 'unsuccess';
     }));
   return Promise.all(requests).then((result) => {
-    setTimeout(() => updatePosts(links, watchedState, state), timeout);
+    result.forEach((elem, index) => {
+      if (elem.length > 0) {
+        const difference = elem;
+        const posts = watchedState.posts[index];
+        watchedState.posts[index] = [...difference, ...posts];
+        watchedState.feedUpdate.status = 'update';
+        watchedState.feedUpdate.status = 'none';
+      }
+    });
+    setTimeout(() => updatePosts(watchedState), timeout);
     return result;
   });
 };
@@ -75,16 +83,19 @@ const init = async () => {
     feedDownload: {
       status: 'editing',
       error: null,
-      links: [],
-      feeds: [],
-      posts: [],
-      viewedPosts: [],
-      modal: {
-        status: 'closed',
-        title: '',
-        description: '',
-        link: '',
-      },
+    },
+    feedUpdate: {
+      status: null,
+      error: null,
+    },
+    links: [],
+    feeds: [],
+    posts: [],
+    viewedPosts: [],
+    modal: {
+      status: 'closed',
+      id: '',
+      link: '',
     },
   };
 
@@ -93,65 +104,52 @@ const init = async () => {
 
     docElements.form.addEventListener('submit', (e) => {
       e.preventDefault();
-      const formData = new FormData(docElements.form);
-      const formValidationError = checkFormValidity(formData.get('url'), state.feedDownload.links);
+      const url = new FormData(docElements.form).get('url');
+      const formValidationError = checkFormValidity(url, watchedState.links);
       if (formValidationError) {
         watchedState.form.status = 'invalid';
         watchedState.form.error = formValidationError;
       } else {
         watchedState.form.status = 'valid';
         watchedState.form.error = null;
+        watchedState.links.push(url);
         watchedState.feedDownload.status = 'sending';
-        downloadContent(formData.get('url'))
+        downloadContent(url)
           .then((result) => {
             const content = parseRSS(result.data.contents);
-            watchedState.feedDownload.links.push(formData.get('url'));
-            watchedState.feedDownload.feeds.push(content.feed);
-            watchedState.feedDownload.posts.push(content.posts);
+            watchedState.feeds.push(content.feed);
+            watchedState.posts.push(content.posts);
             watchedState.feedDownload.status = 'success';
-            watchedState.feedDownload.status = 'editing';
           })
-          .then(() => updatePosts(state.feedDownload.links, watchedState, state)
-            .then((result) => {
-              result.forEach((elem, index) => {
-                if (elem.length > 0) {
-                  const difference = elem;
-                  const posts = state.feedDownload.posts[index];
-                  watchedState.feedDownload.posts[index] = [...difference, ...posts];
-                  watchedState.feedDownload.status = 'update';
-                  watchedState.feedDownload.status = 'editing';
-                }
-              });
-            }))
           .catch((error) => {
             watchedState.feedDownload.error = error;
             watchedState.feedDownload.status = 'unsuccess';
           });
+        if (watchedState.links.length > 0) {
+          updatePosts(watchedState)
+            .catch((error) => {
+              watchedState.feedUpdate.error = error;
+              watchedState.feedUpdate.status = 'unsuccess';
+            });
+        }
       }
     });
 
     docElements.posts.addEventListener('click', (event) => {
       if (event.target.type === 'button') {
         const clickedPost = event.target.previousSibling;
-        if (state.feedDownload.viewedPosts.indexOf(clickedPost.href) === -1) {
-          watchedState.feedDownload.viewedPosts.push(clickedPost.href);
-        }
         const clickedPostNum = clickedPost.id.split('-')[1];
-        const postsReverse = [...state.feedDownload.posts].reverse();
-        const title = postsReverse.flat(Infinity)[clickedPostNum].titlePost;
-        const description = postsReverse.flat(Infinity)[clickedPostNum].descriptionPost;
-        watchedState.feedDownload.modal.title = title;
-        watchedState.feedDownload.modal.description = description;
-        watchedState.feedDownload.modal.link = clickedPost.href;
-        watchedState.feedDownload.modal.status = 'open';
+        watchedState.viewedPosts = [...new Set(watchedState.viewedPosts).add(clickedPost.href)];
+        watchedState.modal.id = clickedPostNum;
+        watchedState.modal.link = clickedPost.href;
+        watchedState.modal.status = 'open';
       }
     });
 
     docElements.modalWindowCloseButton.addEventListener('click', () => {
-      watchedState.feedDownload.modal.status = 'closed';
-      watchedState.feedDownload.modal.title = '';
-      watchedState.feedDownload.modal.description = '';
-      watchedState.feedDownload.modal.link = '';
+      watchedState.modal.status = 'closed';
+      watchedState.modal.link = '';
+      watchedState.modal.id = '';
     });
 
     docElements.ru.addEventListener('click', (e) => {
@@ -161,8 +159,10 @@ const init = async () => {
         docElements.ru.classList.remove('text-white');
         docElements.en.classList.remove('text-secondary');
         docElements.en.classList.add('text-white');
-        watchedState.feedDownload.status = 'update';
-        watchedState.feedDownload.status = 'editing';
+        if (watchedState.links.length > 0) {
+          watchedState.feedUpdate.status = 'update';
+          watchedState.feedUpdate.status = '';
+        }
       });
     });
 
@@ -173,8 +173,10 @@ const init = async () => {
         docElements.en.classList.remove('text-white');
         docElements.ru.classList.remove('text-secondary');
         docElements.ru.classList.add('text-white');
-        watchedState.feedDownload.status = 'update';
-        watchedState.feedDownload.status = 'editing';
+        if (watchedState.links.length > 0) {
+          watchedState.feedUpdate.status = 'update';
+          watchedState.feedUpdate.status = 'none';
+        }
       });
     });
   });
