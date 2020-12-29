@@ -35,21 +35,20 @@ const updatePosts = (watchedState) => {
       return difference;
     })
     .catch((error) => {
-      watchedState.feedUpdate.error = error;
-      watchedState.feedUpdate.status = 'unsuccess';
+      watchedState.feedDownload.error = error;
+      watchedState.feedDownload.status = 'unsuccess';
     }));
   return Promise.all(requests).then((result) => {
-    result.forEach((elem, index) => {
-      if (elem.length > 0) {
-        const difference = elem;
+    result.forEach((difference, index) => {
+      if (difference.length > 0) {
         const posts = watchedState.posts[index];
         watchedState.posts[index] = [...difference, ...posts];
-        watchedState.feedUpdate.status = 'update';
-        watchedState.feedUpdate.status = 'none';
+        watchedState.feedDownload.status = 'update';
+        watchedState.feedDownload.status = 'editing';
       }
     });
-    setTimeout(() => updatePosts(watchedState), timeout);
-    return result;
+    const timerId = setTimeout(() => updatePosts(watchedState), timeout);
+    return timerId;
   });
 };
 
@@ -84,17 +83,13 @@ const init = async () => {
       status: 'editing',
       error: null,
     },
-    feedUpdate: {
-      status: null,
-      error: null,
-    },
     links: [],
     feeds: [],
     posts: [],
     viewedPosts: [],
     modal: {
       status: 'closed',
-      id: '',
+      postId: '',
       link: '',
     },
   };
@@ -128,8 +123,8 @@ const init = async () => {
         if (watchedState.links.length > 0) {
           updatePosts(watchedState)
             .catch((error) => {
-              watchedState.feedUpdate.error = error;
-              watchedState.feedUpdate.status = 'unsuccess';
+              watchedState.feedDownload.error = error;
+              watchedState.feedDownload.status = 'unsuccess';
             });
         }
       }
@@ -139,8 +134,13 @@ const init = async () => {
       if (event.target.type === 'button') {
         const clickedPost = event.target.previousSibling;
         const clickedPostNum = clickedPost.id.split('-')[1];
-        watchedState.viewedPosts = [...new Set(watchedState.viewedPosts).add(clickedPost.href)];
-        watchedState.modal.id = clickedPostNum;
+        // неккоректно работает с Set, не может отследить, что статус open в модуле view
+        if (!watchedState.viewedPosts.includes(clickedPost.href)) {
+          watchedState.viewedPosts.push(clickedPost.href);
+          watchedState.feedDownload.status = 'update';
+          watchedState.feedDownload.status = 'editing';
+        }
+        watchedState.modal.postId = clickedPostNum;
         watchedState.modal.link = clickedPost.href;
         watchedState.modal.status = 'open';
       }
@@ -149,7 +149,7 @@ const init = async () => {
     docElements.modalWindowCloseButton.addEventListener('click', () => {
       watchedState.modal.status = 'closed';
       watchedState.modal.link = '';
-      watchedState.modal.id = '';
+      watchedState.modal.postId = '';
     });
 
     docElements.ru.addEventListener('click', (e) => {
@@ -160,8 +160,8 @@ const init = async () => {
         docElements.en.classList.remove('text-secondary');
         docElements.en.classList.add('text-white');
         if (watchedState.links.length > 0) {
-          watchedState.feedUpdate.status = 'update';
-          watchedState.feedUpdate.status = '';
+          watchedState.feedDownload.status = 'update';
+          watchedState.feedDownload.status = 'editing';
         }
       });
     });
@@ -174,8 +174,8 @@ const init = async () => {
         docElements.ru.classList.remove('text-secondary');
         docElements.ru.classList.add('text-white');
         if (watchedState.links.length > 0) {
-          watchedState.feedUpdate.status = 'update';
-          watchedState.feedUpdate.status = 'none';
+          watchedState.feedDownload.status = 'update';
+          watchedState.feedDownload.status = 'editing';
         }
       });
     });

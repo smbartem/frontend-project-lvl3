@@ -22,7 +22,7 @@ const generateFeeds = (feeds, container) => {
   container.append(list);
 };
 
-const generatePosts = (posts, container) => {
+const generatePosts = (posts, viewedPosts, container) => {
   const title = document.createElement('h2');
   title.textContent = i18next.t('posts');
   const list = document.createElement('ul');
@@ -39,7 +39,8 @@ const generatePosts = (posts, container) => {
     post.textContent = el.titlePost;
     post.href = el.linkPost;
     post.id = `post-${index}`;
-    post.classList.add('font-weight-bold');
+    const fontWeightStyle = viewedPosts.includes(el.linkPost) ? 'font-weight-normal' : 'font-weight-bold';
+    post.classList.add(`${fontWeightStyle}`);
     point.prepend(previewBtn);
     point.prepend(post);
     list.append(point);
@@ -47,14 +48,6 @@ const generatePosts = (posts, container) => {
   container.innerHTML = '';
   container.prepend(list);
   container.prepend(title);
-};
-
-const markViewedPosts = (container, watchedState) => {
-  watchedState.viewedPosts.forEach((el) => {
-    const post = container.querySelector(`[href="${el}"]`);
-    post.classList.add('font-weight-normal');
-    post.classList.remove('font-weight-bold');
-  });
 };
 
 const handleForm = (formValidationError, docElements) => {
@@ -73,8 +66,7 @@ const handleFeeds = (watchedState, feedStatus, docElements) => {
   switch (feedStatus) {
     case 'success':
       generateFeeds(watchedState.feeds, docElements.feeds);
-      generatePosts(watchedState.posts, docElements.posts);
-      markViewedPosts(docElements.posts, watchedState);
+      generatePosts(watchedState.posts, watchedState.viewedPosts, docElements.posts);
       docElements.feedback.classList.add('text-success');
       docElements.feedback.classList.remove('text-danger');
       docElements.feedback.textContent = i18next.t('succeed');
@@ -87,8 +79,7 @@ const handleFeeds = (watchedState, feedStatus, docElements) => {
       break;
     case 'update':
       generateFeeds(watchedState.feeds, docElements.feeds);
-      generatePosts(watchedState.posts, docElements.posts);
-      markViewedPosts(docElements.posts, watchedState);
+      generatePosts(watchedState.posts, watchedState.viewedPosts, docElements.posts);
       break;
     case 'sending':
       break;
@@ -107,9 +98,9 @@ const handleFeeds = (watchedState, feedStatus, docElements) => {
 
 const handleModalWindow = (docElements, watchedState, value) => {
   if (value === 'open') {
-    const postsReverse = [...watchedState.posts].reverse();
-    const title = postsReverse.flat(Infinity)[watchedState.modal.id].titlePost;
-    const description = postsReverse.flat(Infinity)[watchedState.modal.id].descriptionPost;
+    const postsReverse = [...watchedState.posts].reverse().flat(Infinity);
+    const title = postsReverse[watchedState.modal.postId].titlePost;
+    const description = postsReverse[watchedState.modal.postId].descriptionPost;
     docElements.modalWindowTitle.textContent = title;
     docElements.modalWindowContent.textContent = description;
     docElements.modalWindowOpenButton.href = watchedState.modal.link;
@@ -132,14 +123,8 @@ export default (state, docElements) => {
       case 'feedDownload.status':
         handleFeeds(watchedState, value, docElements);
         break;
-      case 'feedUpdate.status':
-        handleFeeds(watchedState, value, docElements);
-        break;
       case 'modal.status':
         handleModalWindow(docElements, watchedState, value);
-        break;
-      case 'viewedPosts':
-        markViewedPosts(docElements.posts, watchedState);
         break;
       default:
         break;
