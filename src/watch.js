@@ -15,7 +15,7 @@ const generateFeeds = (feeds, container) => {
     feedDescription.textContent = el.feedDescription;
     point.append(feedTitle);
     point.append(feedDescription);
-    list.prepend(point);
+    list.append(point);
   });
   container.innerHTML = '';
   container.append(title);
@@ -27,8 +27,7 @@ const generatePosts = (posts, viewedPosts, container) => {
   title.textContent = i18next.t('posts');
   const list = document.createElement('ul');
   list.classList.add('list-group');
-  const postsListReverse = [...posts].reverse();
-  postsListReverse.flat(Infinity).forEach((el, index) => {
+  [...posts].flat(Infinity).forEach((el, index) => {
     const point = document.createElement('li');
     point.classList.add('list-group-item', 'd-flex', 'justify-content-between');
     const post = document.createElement('a');
@@ -39,7 +38,7 @@ const generatePosts = (posts, viewedPosts, container) => {
     post.textContent = el.titlePost;
     post.href = el.linkPost;
     post.id = `post-${index}`;
-    const fontWeightStyle = viewedPosts.includes(el.linkPost) ? 'font-weight-normal' : 'font-weight-bold';
+    const fontWeightStyle = viewedPosts.has(el.linkPost) ? 'font-weight-normal' : 'font-weight-bold';
     post.classList.add(`${fontWeightStyle}`);
     point.prepend(previewBtn);
     point.prepend(post);
@@ -73,37 +72,45 @@ const handleFeeds = (watchedState, feedStatus, docElements) => {
       docElements.input.value = '';
       docElements.input.focus();
       break;
-    case 'failed':
-      docElements.feedback.classList.add('text-danger');
-      docElements.feedback.textContent = i18next.t('downloadError');
-      break;
-    case 'update':
-      generateFeeds(watchedState.feeds, docElements.feeds);
-      generatePosts(watchedState.posts, watchedState.viewedPosts, docElements.posts);
-      break;
-    case 'sending':
-      break;
     case 'unsuccess':
       docElements.feedback.classList.add('text-danger');
       docElements.feedback.textContent = i18next.t('downloadError');
       break;
-    case 'editing':
-      break;
-    case 'none':
+    case 'idle':
       break;
     default:
       throw new Error(`Unknown feed status: '${feedStatus}'!`);
   }
 };
 
+const handleUpdate = (watchedState, updateStatus, docElements) => {
+  switch (updateStatus) {
+    case 'success':
+      generateFeeds(watchedState.feeds, docElements.feeds);
+      generatePosts(watchedState.posts, watchedState.viewedPosts, docElements.posts);
+      break;
+    case 'unsuccess':
+      docElements.feedback.classList.add('text-danger');
+      docElements.feedback.textContent = i18next.t('downloadError');
+      break;
+    case 'idle':
+      break;
+    default:
+      throw new Error(`Unknown feed status: '${updateStatus}'!`);
+  }
+};
+
 const handleModalWindow = (docElements, watchedState, value) => {
   if (value === 'open') {
-    const postsReverse = [...watchedState.posts].reverse().flat(Infinity);
-    const title = postsReverse[watchedState.modal.postId].titlePost;
-    const description = postsReverse[watchedState.modal.postId].descriptionPost;
+    // Подскажите, пожалуйста:
+    // не очень понял зачем необходимо решить задачу через поиск объекта в массиве по свойству
+    // я присвоил при генерации постов ID для каждого поста, почему нельзя найти его по ID ?
+    const post = [...watchedState.posts].flat(Infinity)[watchedState.modal.postId];
+    const title = post.titlePost;
+    const description = post.descriptionPost;
     docElements.modalWindowTitle.textContent = title;
     docElements.modalWindowContent.textContent = description;
-    docElements.modalWindowOpenButton.href = watchedState.modal.link;
+    docElements.modalWindowOpenButton.href = post.linkPost;
     docElements.modalWindow.classList.add('show', 'd-block');
     docElements.modalWindowBackdrop.classList.add('modal-backdrop', 'fade', 'show');
     docElements.body.classList.add('modal-open');
@@ -122,6 +129,10 @@ export default (state, docElements) => {
         break;
       case 'feedDownload.status':
         handleFeeds(watchedState, value, docElements);
+        console.log(state);
+        break;
+      case 'update.status':
+        handleUpdate(watchedState, value, docElements);
         break;
       case 'modal.status':
         handleModalWindow(docElements, watchedState, value);

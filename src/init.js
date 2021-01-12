@@ -43,12 +43,11 @@ const updatePosts = (watchedState) => {
       if (difference.length > 0) {
         const posts = watchedState.posts[index];
         watchedState.posts[index] = [...difference, ...posts];
-        watchedState.feedDownload.status = 'update';
-        watchedState.feedDownload.status = 'editing';
+        watchedState.update.status = 'success';
+        watchedState.update.status = 'idle';
       }
     });
-    const timerId = setTimeout(() => updatePosts(watchedState), timeout);
-    return timerId;
+    return setTimeout(() => updatePosts(watchedState), timeout);
   });
 };
 
@@ -80,23 +79,30 @@ const init = async () => {
       error: null,
     },
     feedDownload: {
-      status: 'editing',
+      status: 'idle',
+      error: null,
+    },
+    update: {
+      status: 'idle',
       error: null,
     },
     links: [],
     feeds: [],
     posts: [],
-    viewedPosts: [],
+    viewedPosts: new Set(),
     modal: {
       status: 'closed',
       postId: '',
-      link: '',
     },
   };
 
   initialRender('en', docElements).then(() => {
     const watchedState = watch(state, docElements);
-
+    updatePosts(watchedState)
+      .catch((error) => {
+        watchedState.update.error = error;
+        watchedState.update.status = 'unsuccess';
+      });
     docElements.form.addEventListener('submit', (e) => {
       e.preventDefault();
       const url = new FormData(docElements.form).get('url');
@@ -107,26 +113,19 @@ const init = async () => {
       } else {
         watchedState.form.status = 'valid';
         watchedState.form.error = null;
-        watchedState.links.push(url);
-        watchedState.feedDownload.status = 'sending';
+        watchedState.links.unshift(url);
         downloadContent(url)
           .then((result) => {
             const content = parseRSS(result.data.contents);
-            watchedState.feeds.push(content.feed);
-            watchedState.posts.push(content.posts);
+            watchedState.feeds.unshift(content.feed);
+            watchedState.posts.unshift(content.posts);
             watchedState.feedDownload.status = 'success';
+            watchedState.feedDownload.status = 'idle';
           })
           .catch((error) => {
             watchedState.feedDownload.error = error;
             watchedState.feedDownload.status = 'unsuccess';
           });
-        if (watchedState.links.length > 0) {
-          updatePosts(watchedState)
-            .catch((error) => {
-              watchedState.feedDownload.error = error;
-              watchedState.feedDownload.status = 'unsuccess';
-            });
-        }
       }
     });
 
@@ -134,12 +133,9 @@ const init = async () => {
       if (event.target.type === 'button') {
         const clickedPost = event.target.previousSibling;
         const clickedPostNum = clickedPost.id.split('-')[1];
-        // неккоректно работает с Set, не может отследить, что статус open в модуле view
-        if (!watchedState.viewedPosts.includes(clickedPost.href)) {
-          watchedState.viewedPosts.push(clickedPost.href);
-          watchedState.feedDownload.status = 'update';
-          watchedState.feedDownload.status = 'editing';
-        }
+        watchedState.viewedPosts.add(clickedPost.href);
+        watchedState.update.status = 'success';
+        watchedState.update.status = 'idle';
         watchedState.modal.postId = clickedPostNum;
         watchedState.modal.link = clickedPost.href;
         watchedState.modal.status = 'open';
@@ -160,8 +156,8 @@ const init = async () => {
         docElements.en.classList.remove('text-secondary');
         docElements.en.classList.add('text-white');
         if (watchedState.links.length > 0) {
-          watchedState.feedDownload.status = 'update';
-          watchedState.feedDownload.status = 'editing';
+          watchedState.update.status = 'success';
+          watchedState.update.status = 'idle';
         }
       });
     });
@@ -174,8 +170,8 @@ const init = async () => {
         docElements.ru.classList.remove('text-secondary');
         docElements.ru.classList.add('text-white');
         if (watchedState.links.length > 0) {
-          watchedState.feedDownload.status = 'update';
-          watchedState.feedDownload.status = 'editing';
+          watchedState.update.status = 'success';
+          watchedState.update.status = 'idle';
         }
       });
     });
