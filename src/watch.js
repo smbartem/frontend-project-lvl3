@@ -49,7 +49,7 @@ const generatePosts = (posts, viewedPosts, container) => {
   container.prepend(title);
 };
 
-const handleForm = (formValidationError, docElements) => {
+const handleFormError = (formValidationError, docElements) => {
   if (formValidationError === null) {
     docElements.input.classList.remove('is-invalid');
     docElements.feedback.classList.remove('text-danger');
@@ -61,7 +61,7 @@ const handleForm = (formValidationError, docElements) => {
   }
 };
 
-const handleFeeds = (watchedState, feedStatus, docElements) => {
+const handleFeedDownloadStatus = (watchedState, feedStatus, docElements) => {
   switch (feedStatus) {
     case 'success':
       generateFeeds(watchedState.feeds, docElements.feeds);
@@ -83,7 +83,7 @@ const handleFeeds = (watchedState, feedStatus, docElements) => {
   }
 };
 
-const handleUpdate = (watchedState, updateStatus, docElements) => {
+const handleUpdateStatus = (watchedState, updateStatus, docElements) => {
   switch (updateStatus) {
     case 'success':
       generateFeeds(watchedState.feeds, docElements.feeds);
@@ -100,11 +100,8 @@ const handleUpdate = (watchedState, updateStatus, docElements) => {
   }
 };
 
-const handleModalWindow = (docElements, watchedState, value) => {
+const handleModalWindowStatus = (docElements, watchedState, value) => {
   if (value === 'open') {
-    // Подскажите, пожалуйста:
-    // не очень понял зачем необходимо решить задачу через поиск объекта в массиве по свойству
-    // я присвоил при генерации постов ID для каждого поста, почему нельзя найти его по ID ?
     const post = [...watchedState.posts].flat(Infinity)[watchedState.modal.postId];
     const title = post.titlePost;
     const description = post.descriptionPost;
@@ -121,21 +118,44 @@ const handleModalWindow = (docElements, watchedState, value) => {
   }
 };
 
+const handlelanguage = (docElements, value) => {
+  docElements.title.textContent = i18next.t('title');
+  docElements.lead.textContent = i18next.t('lead');
+  docElements.input.placeholder = i18next.t('inputPlaceholder');
+  docElements.submitButton.textContent = i18next.t('button');
+  docElements.exampleLink.textContent = i18next.t('exampleLink');
+  docElements.modalWindowCloseButton.textContent = i18next.t('сloseButton');
+  docElements.modalWindowOpenButton.textContent = i18next.t('openButton');
+  if (value === 'ru') {
+    docElements.ru.classList.add('text-secondary');
+    docElements.ru.classList.remove('text-white');
+    docElements.en.classList.remove('text-secondary');
+    docElements.en.classList.add('text-white');
+  } else {
+    docElements.en.classList.add('text-secondary');
+    docElements.en.classList.remove('text-white');
+    docElements.ru.classList.remove('text-secondary');
+    docElements.ru.classList.add('text-white');
+  }
+};
+
 export default (state, docElements) => {
   const watchedState = onChange(state, (path, value) => {
     switch (path) {
       case 'form.error':
-        handleForm(value, docElements);
+        handleFormError(value, docElements);
         break;
       case 'feedDownload.status':
-        handleFeeds(watchedState, value, docElements);
-        console.log(state);
+        handleFeedDownloadStatus(watchedState, value, docElements);
         break;
       case 'update.status':
-        handleUpdate(watchedState, value, docElements);
+        handleUpdateStatus(watchedState, value, docElements);
         break;
       case 'modal.status':
-        handleModalWindow(docElements, watchedState, value);
+        handleModalWindowStatus(docElements, watchedState, value);
+        break;
+      case 'language':
+        handlelanguage(docElements, value);
         break;
       default:
         break;

@@ -25,8 +25,7 @@ const downloadContent = (newLink) => {
   return axios.get(`${proxy}${encodeURIComponent(newLink)}`);
 };
 
-const updatePosts = (watchedState) => {
-  const timeout = 5000;
+const updatePosts = (watchedState, timeout = 5000) => {
   const requests = watchedState.links.map((url, index) => downloadContent(url)
     .then((result) => {
       const newPosts = parseRSS(result.data.contents).posts;
@@ -35,18 +34,23 @@ const updatePosts = (watchedState) => {
       return difference;
     })
     .catch((error) => {
-      watchedState.feedDownload.error = error;
-      watchedState.feedDownload.status = 'unsuccess';
+      watchedState.update.error = error;
+      watchedState.update.status = 'unsuccess';
     }));
   return Promise.all(requests).then((result) => {
-    result.forEach((difference, index) => {
+    result.map((difference, index) => {
       if (difference.length > 0) {
         const posts = watchedState.posts[index];
-        watchedState.posts[index] = [...difference, ...posts];
-        watchedState.update.status = 'success';
-        watchedState.update.status = 'idle';
+        const newPosts = [...difference, ...posts];
+        watchedState.posts[index] = newPosts;
+        return newPosts;
       }
+      return difference;
     });
+    if (result.flat(Infinity).length > 0) {
+      watchedState.update.status = 'success';
+      watchedState.update.status = 'idle';
+    }
     return setTimeout(() => updatePosts(watchedState), timeout);
   });
 };
@@ -74,6 +78,7 @@ const init = async () => {
   };
 
   const state = {
+    language: '',
     form: {
       status: 'valid',
       error: null,
@@ -96,8 +101,9 @@ const init = async () => {
     },
   };
 
-  initialRender('en', docElements).then(() => {
+  initialRender('en').then(() => {
     const watchedState = watch(state, docElements);
+    watchedState.language = 'en';
     updatePosts(watchedState)
       .catch((error) => {
         watchedState.update.error = error;
@@ -113,14 +119,19 @@ const init = async () => {
       } else {
         watchedState.form.status = 'valid';
         watchedState.form.error = null;
-        watchedState.links.unshift(url);
         downloadContent(url)
           .then((result) => {
             const content = parseRSS(result.data.contents);
             watchedState.feeds.unshift(content.feed);
             watchedState.posts.unshift(content.posts);
+            /* Подскажите, пожалуйста, если убрать присваивание статуса 'success', то не будет
+            рендера. Не очень понимаю как избавиться от обновления поля в стейте сразу же несколько
+            раз. Наверное, необходимо перенести измения статуса с 'success' на 'idle' после
+            осуществления рендера, но мы обсуждали, что так делать нельзя. Подскажите, пожалуйста,
+            в какую сторону размышлять при реорганизации кода. */
             watchedState.feedDownload.status = 'success';
             watchedState.feedDownload.status = 'idle';
+            watchedState.links.unshift(url);
           })
           .catch((error) => {
             watchedState.feedDownload.error = error;
@@ -150,11 +161,8 @@ const init = async () => {
 
     docElements.ru.addEventListener('click', (e) => {
       e.preventDefault();
-      initialRender('ru', docElements).then(() => {
-        docElements.ru.classList.add('text-secondary');
-        docElements.ru.classList.remove('text-white');
-        docElements.en.classList.remove('text-secondary');
-        docElements.en.classList.add('text-white');
+      initialRender('ru').then(() => {
+        watchedState.language = 'ru';
         if (watchedState.links.length > 0) {
           watchedState.update.status = 'success';
           watchedState.update.status = 'idle';
@@ -164,11 +172,8 @@ const init = async () => {
 
     docElements.en.addEventListener('click', (e) => {
       e.preventDefault();
-      initialRender('en', docElements).then(() => {
-        docElements.en.classList.add('text-secondary');
-        docElements.en.classList.remove('text-white');
-        docElements.ru.classList.remove('text-secondary');
-        docElements.ru.classList.add('text-white');
+      initialRender('en').then(() => {
+        watchedState.language = 'en';
         if (watchedState.links.length > 0) {
           watchedState.update.status = 'success';
           watchedState.update.status = 'idle';
