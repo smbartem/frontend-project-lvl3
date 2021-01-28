@@ -61,16 +61,9 @@ const handleFormError = (formValidationError, docElements) => {
   }
 };
 
-const handleFeedDownloadStatus = (watchedState, feedStatus, docElements) => {
+const handleFeedDownloadStatus = (feedStatus, docElements) => {
   switch (feedStatus) {
     case 'success':
-      generateFeeds(watchedState.feeds, docElements.feeds);
-      generatePosts(watchedState.posts, watchedState.viewedPosts, docElements.posts);
-      docElements.feedback.classList.add('text-success');
-      docElements.feedback.classList.remove('text-danger');
-      docElements.feedback.textContent = i18next.t('succeed');
-      docElements.input.value = '';
-      docElements.input.focus();
       break;
     case 'unsuccess':
       docElements.feedback.classList.add('text-danger');
@@ -83,11 +76,11 @@ const handleFeedDownloadStatus = (watchedState, feedStatus, docElements) => {
   }
 };
 
-const handleUpdateStatus = (watchedState, updateStatus, docElements) => {
+const handleUpdateStatus = (updateStatus, docElements) => {
   switch (updateStatus) {
     case 'success':
-      generateFeeds(watchedState.feeds, docElements.feeds);
-      generatePosts(watchedState.posts, watchedState.viewedPosts, docElements.posts);
+      docElements.feedback.classList.remove('text-danger');
+      docElements.feedback.textContent = '';
       break;
     case 'unsuccess':
       docElements.feedback.classList.add('text-danger');
@@ -118,7 +111,7 @@ const handleModalWindowStatus = (docElements, watchedState, value) => {
   }
 };
 
-const handlelanguage = (docElements, value) => {
+const handlelanguage = (docElements, value, watchedState) => {
   docElements.title.textContent = i18next.t('title');
   docElements.lead.textContent = i18next.t('lead');
   docElements.input.placeholder = i18next.t('inputPlaceholder');
@@ -126,6 +119,12 @@ const handlelanguage = (docElements, value) => {
   docElements.exampleLink.textContent = i18next.t('exampleLink');
   docElements.modalWindowCloseButton.textContent = i18next.t('сloseButton');
   docElements.modalWindowOpenButton.textContent = i18next.t('openButton');
+  if (watchedState.feeds.length > 0) {
+    generateFeeds(watchedState.feeds, docElements.feeds);
+  }
+  if (watchedState.posts.length > 0) {
+    generatePosts(watchedState.posts, watchedState.viewedPosts, docElements.posts);
+  }
   if (value === 'ru') {
     docElements.ru.classList.add('text-secondary');
     docElements.ru.classList.remove('text-white');
@@ -142,20 +141,36 @@ const handlelanguage = (docElements, value) => {
 export default (state, docElements) => {
   const watchedState = onChange(state, (path, value) => {
     switch (path) {
+      case 'feeds':
+        generateFeeds(value, docElements.feeds);
+        break;
+      case 'posts':
+        generatePosts(value, watchedState.viewedPosts, docElements.posts);
+        break;
+      case 'viewedPosts':
+        generatePosts(watchedState.posts, value, docElements.posts);
+        break;
+      case 'links':
+        docElements.feedback.classList.add('text-success');
+        docElements.feedback.classList.remove('text-danger');
+        docElements.feedback.textContent = i18next.t('succeed');
+        docElements.input.value = '';
+        docElements.input.focus();
+        break;
       case 'form.error':
         handleFormError(value, docElements);
         break;
       case 'feedDownload.status':
-        handleFeedDownloadStatus(watchedState, value, docElements);
+        handleFeedDownloadStatus(value, docElements);
         break;
       case 'update.status':
-        handleUpdateStatus(watchedState, value, docElements);
+        handleUpdateStatus(value, docElements);
         break;
       case 'modal.status':
         handleModalWindowStatus(docElements, watchedState, value);
         break;
       case 'language':
-        handlelanguage(docElements, value);
+        handlelanguage(docElements, value, watchedState);
         break;
       default:
         break;

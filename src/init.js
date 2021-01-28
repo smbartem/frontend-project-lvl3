@@ -2,22 +2,21 @@ import axios from 'axios';
 import _ from 'lodash';
 import checkFormValidity from './checkFormValidity.js';
 import watch from './watch.js';
-import initialRender from './locales/initLang.js';
+import initTranslation from './locales/initLang.js';
 
 const parseRSS = (data) => {
   const parser = new DOMParser();
   const rssDataDocument = parser.parseFromString(data, 'text/xml');
   const feedTitle = rssDataDocument.querySelector('title').textContent;
   const feedDescription = rssDataDocument.querySelector('description').textContent;
-  const feed = { feedTitle, feedDescription };
-  const items = rssDataDocument.querySelectorAll('item');
-  const posts = [...items].map((el) => {
+  const channel = { feedTitle, feedDescription };
+  const items = [...rssDataDocument.querySelectorAll('item')].map((el) => {
     const titlePost = el.querySelector('title').textContent;
     const linkPost = el.querySelector('link').textContent;
     const descriptionPost = el.querySelector('description').textContent;
     return { titlePost, linkPost, descriptionPost };
   });
-  return { feed, posts };
+  return { feed: channel, posts: items };
 };
 
 const downloadContent = (newLink) => {
@@ -25,32 +24,33 @@ const downloadContent = (newLink) => {
   return axios.get(`${proxy}${encodeURIComponent(newLink)}`);
 };
 
+/* Подскажите, пожалуйста, при обновлении я планировал рендерить так, как и при загрузке ленты
+, т.е. при изменении posts:
+case 'posts':
+        generatePosts(value, watchedState.viewedPosts, docElements.posts);
+        break;
+onChange не отслеживает изменения внутри posts, хотя изменения
+записываются. Следовательно, не происходит обновление постов. Перейти на обновление по статусу
+success, либо можно что-то поправить? Вроде же мы меняем posts данной строчкой:
+watchedState.posts[index] = [...difference, ...oldPosts]; */
 const updatePosts = (watchedState, timeout = 5000) => {
   const requests = watchedState.links.map((url, index) => downloadContent(url)
     .then((result) => {
       const newPosts = parseRSS(result.data.contents).posts;
       const oldPosts = watchedState.posts[index];
       const difference = _.differenceWith(newPosts, oldPosts, _.isEqual);
+      if (difference.length > 0) {
+        watchedState.posts[index] = [...difference, ...oldPosts];
+      }
       return difference;
     })
     .catch((error) => {
       watchedState.update.error = error;
       watchedState.update.status = 'unsuccess';
     }));
-  return Promise.all(requests).then((result) => {
-    result.map((difference, index) => {
-      if (difference.length > 0) {
-        const posts = watchedState.posts[index];
-        const newPosts = [...difference, ...posts];
-        watchedState.posts[index] = newPosts;
-        return newPosts;
-      }
-      return difference;
-    });
-    if (result.flat(Infinity).length > 0) {
-      watchedState.update.status = 'success';
-      watchedState.update.status = 'idle';
-    }
+  return Promise.all(requests).then(() => {
+    watchedState.update.status = 'success';
+    watchedState.update.status = 'idle';
     return setTimeout(() => updatePosts(watchedState), timeout);
   });
 };
@@ -101,7 +101,7 @@ const init = async () => {
     },
   };
 
-  initialRender('en').then(() => {
+  initTranslation('en').then(() => {
     const watchedState = watch(state, docElements);
     watchedState.language = 'en';
     updatePosts(watchedState)
@@ -124,12 +124,6 @@ const init = async () => {
             const content = parseRSS(result.data.contents);
             watchedState.feeds.unshift(content.feed);
             watchedState.posts.unshift(content.posts);
-            /* Подскажите, пожалуйста, если убрать присваивание статуса 'success', то не будет
-            рендера. Не очень понимаю как избавиться от обновления поля в стейте сразу же несколько
-            раз. Наверное, необходимо перенести измения статуса с 'success' на 'idle' после
-            осуществления рендера, но мы обсуждали, что так делать нельзя. Подскажите, пожалуйста,
-            в какую сторону размышлять при реорганизации кода. */
-            watchedState.feedDownload.status = 'success';
             watchedState.feedDownload.status = 'idle';
             watchedState.links.unshift(url);
           })
@@ -145,8 +139,6 @@ const init = async () => {
         const clickedPost = event.target.previousSibling;
         const clickedPostNum = clickedPost.id.split('-')[1];
         watchedState.viewedPosts.add(clickedPost.href);
-        watchedState.update.status = 'success';
-        watchedState.update.status = 'idle';
         watchedState.modal.postId = clickedPostNum;
         watchedState.modal.link = clickedPost.href;
         watchedState.modal.status = 'open';
@@ -161,23 +153,15 @@ const init = async () => {
 
     docElements.ru.addEventListener('click', (e) => {
       e.preventDefault();
-      initialRender('ru').then(() => {
+      initTranslation('ru').then(() => {
         watchedState.language = 'ru';
-        if (watchedState.links.length > 0) {
-          watchedState.update.status = 'success';
-          watchedState.update.status = 'idle';
-        }
       });
     });
 
     docElements.en.addEventListener('click', (e) => {
       e.preventDefault();
-      initialRender('en').then(() => {
+      initTranslation('en').then(() => {
         watchedState.language = 'en';
-        if (watchedState.links.length > 0) {
-          watchedState.update.status = 'success';
-          watchedState.update.status = 'idle';
-        }
       });
     });
   });
