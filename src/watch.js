@@ -10,9 +10,9 @@ const generateFeeds = (feeds, container) => {
     const point = document.createElement('li');
     point.classList.add('list-group-item');
     const feedTitle = document.createElement('h3');
-    feedTitle.textContent = el.feedTitle;
+    feedTitle.textContent = el.channelTitle;
     const feedDescription = document.createElement('p');
-    feedDescription.textContent = el.feedDescription;
+    feedDescription.textContent = el.channelDescription;
     point.append(feedTitle);
     point.append(feedDescription);
     list.append(point);
@@ -35,10 +35,10 @@ const generatePosts = (posts, viewedPosts, container) => {
     previewBtn.setAttribute('type', 'button');
     previewBtn.classList.add('btn', 'btn-primary', 'btn-sm');
     previewBtn.textContent = i18next.t('viewButton');
-    post.textContent = el.titlePost;
-    post.href = el.linkPost;
+    post.textContent = el.itemTitle;
+    post.href = el.itemLink;
     post.id = `post-${index}`;
-    const fontWeightStyle = viewedPosts.has(el.linkPost) ? 'font-weight-normal' : 'font-weight-bold';
+    const fontWeightStyle = viewedPosts.has(el.itemLink) ? 'font-weight-normal' : 'font-weight-bold';
     post.classList.add(`${fontWeightStyle}`);
     point.prepend(previewBtn);
     point.prepend(post);
@@ -96,11 +96,11 @@ const handleUpdateStatus = (updateStatus, docElements) => {
 const handleModalWindowStatus = (docElements, watchedState, value) => {
   if (value === 'open') {
     const post = [...watchedState.posts].flat(Infinity)[watchedState.modal.postId];
-    const title = post.titlePost;
-    const description = post.descriptionPost;
+    const title = post.itemTitle;
+    const description = post.itemDescription;
     docElements.modalWindowTitle.textContent = title;
     docElements.modalWindowContent.textContent = description;
-    docElements.modalWindowOpenButton.href = post.linkPost;
+    docElements.modalWindowOpenButton.href = post.itemLink;
     docElements.modalWindow.classList.add('show', 'd-block');
     docElements.modalWindowBackdrop.classList.add('modal-backdrop', 'fade', 'show');
     docElements.body.classList.add('modal-open');

@@ -7,16 +7,16 @@ import initTranslation from './locales/initLang.js';
 const parseRSS = (data) => {
   const parser = new DOMParser();
   const rssDataDocument = parser.parseFromString(data, 'text/xml');
-  const feedTitle = rssDataDocument.querySelector('title').textContent;
-  const feedDescription = rssDataDocument.querySelector('description').textContent;
-  const channel = { feedTitle, feedDescription };
+  const channelTitle = rssDataDocument.querySelector('title').textContent;
+  const channelDescription = rssDataDocument.querySelector('description').textContent;
+  const channel = { channelTitle, channelDescription };
   const items = [...rssDataDocument.querySelectorAll('item')].map((el) => {
-    const titlePost = el.querySelector('title').textContent;
-    const linkPost = el.querySelector('link').textContent;
-    const descriptionPost = el.querySelector('description').textContent;
-    return { titlePost, linkPost, descriptionPost };
+    const itemTitle = el.querySelector('title').textContent;
+    const itemLink = el.querySelector('link').textContent;
+    const itemDescription = el.querySelector('description').textContent;
+    return { itemTitle, itemLink, itemDescription };
   });
-  return { feed: channel, posts: items };
+  return { channel, items };
 };
 
 const downloadContent = (newLink) => {
@@ -24,23 +24,16 @@ const downloadContent = (newLink) => {
   return axios.get(`${proxy}${encodeURIComponent(newLink)}`);
 };
 
-/* Подскажите, пожалуйста, при обновлении я планировал рендерить так, как и при загрузке ленты
-, т.е. при изменении posts:
-case 'posts':
-        generatePosts(value, watchedState.viewedPosts, docElements.posts);
-        break;
-onChange не отслеживает изменения внутри posts, хотя изменения
-записываются. Следовательно, не происходит обновление постов. Перейти на обновление по статусу
-success, либо можно что-то поправить? Вроде же мы меняем posts данной строчкой:
-watchedState.posts[index] = [...difference, ...oldPosts]; */
 const updatePosts = (watchedState, timeout = 5000) => {
   const requests = watchedState.links.map((url, index) => downloadContent(url)
     .then((result) => {
-      const newPosts = parseRSS(result.data.contents).posts;
+      const newPosts = parseRSS(result.data.contents).items;
       const oldPosts = watchedState.posts[index];
       const difference = _.differenceWith(newPosts, oldPosts, _.isEqual);
       if (difference.length > 0) {
-        watchedState.posts[index] = [...difference, ...oldPosts];
+        const newPostsState = [...watchedState.posts];
+        newPostsState[index] = [...difference, ...oldPosts];
+        watchedState.posts = [...newPostsState];
       }
       return difference;
     })
@@ -50,7 +43,6 @@ const updatePosts = (watchedState, timeout = 5000) => {
     }));
   return Promise.all(requests).then(() => {
     watchedState.update.status = 'success';
-    watchedState.update.status = 'idle';
     return setTimeout(() => updatePosts(watchedState), timeout);
   });
 };
@@ -122,8 +114,8 @@ const init = async () => {
         downloadContent(url)
           .then((result) => {
             const content = parseRSS(result.data.contents);
-            watchedState.feeds.unshift(content.feed);
-            watchedState.posts.unshift(content.posts);
+            watchedState.feeds.unshift(content.channel);
+            watchedState.posts.unshift(content.items);
             watchedState.feedDownload.status = 'idle';
             watchedState.links.unshift(url);
           })
