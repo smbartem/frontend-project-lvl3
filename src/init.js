@@ -112,11 +112,13 @@ const init = async () => {
       } else {
         watchedState.form.status = 'valid';
         watchedState.form.error = null;
+        watchedState.feedDownload.status = 'sending';
         downloadContent(url)
           .then((result) => {
             const content = parseRSS(result.data.contents);
             watchedState.feeds.unshift(content.channel);
             watchedState.posts.unshift(content.items);
+            watchedState.feedDownload.status = 'success';
             watchedState.feedDownload.status = 'idle';
             watchedState.links.unshift(url);
           })

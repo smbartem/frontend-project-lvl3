@@ -64,8 +64,13 @@ const handleFormError = (formValidationError, docElements) => {
 const handleFeedDownloadStatus = (feedStatus, docElements) => {
   switch (feedStatus) {
     case 'success':
+      docElements.input.readOnly = false;
+      break;
+    case 'sending':
+      docElements.input.readOnly = true;
       break;
     case 'unsuccess':
+      docElements.input.readOnly = false;
       docElements.feedback.classList.add('text-danger');
       docElements.feedback.textContent = i18next.t('downloadError');
       break;
