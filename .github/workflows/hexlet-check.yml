@@ -1,7 +1,4 @@
-- name: Hexlet project check
-  uses: hexlet/project-action@release
-  with:
-    hexlet-id: ${{ secrets.HEXLET_ID }}
+name: hexlet-check
 
 on:
   push:
@@ -16,3 +13,5 @@ jobs:
 
       - name: Hexlet project check
         uses: hexlet/project-action@release
+        with:
+          hexlet-id: ${{ secrets.HEXLET_ID }}
