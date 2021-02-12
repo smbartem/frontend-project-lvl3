@@ -169,7 +169,7 @@ export default (state, docElements) => {
         handleFormError(value, docElements);
         break;
       case 'feedDownload.status':
-        handleFeedDownloadStatus(value, docElements, state.feedDownload.error);
+        handleFeedDownloadStatus(value, docElements, watchedState.feedDownload.error);
         break;
       case 'update.status':
         handleUpdateStatus(value, docElements);
