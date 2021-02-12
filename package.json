@@ -1,10 +1,10 @@
 {
-  "name": "frontend-project-lvl3",
+  "name": "@hexlet/code",
   "version": "1.0.0",
   "description": "RSS Reader",
   "main": "index.js",
   "scripts": {
-    "test": "jest --colors",
+    "test": "@hexlet/code",
     "build": "webpack",
     "start": "webpack serve",
     "production": "webpack --mode production"

@@ -1,4 +1,7 @@
-name: hexlet-check
+- name: Hexlet project check
+  uses: hexlet/project-action@release
+  with:
+    hexlet-id: ${{ secrets.HEXLET_ID }}
 
 on:
   push:
