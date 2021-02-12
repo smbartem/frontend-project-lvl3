@@ -115,6 +115,7 @@ const init = async () => {
         watchedState.feedDownload.status = 'sending';
         downloadContent(url)
           .then((result) => {
+            console.log(result);
             const content = parseRSS(result.data.contents);
             watchedState.feeds.unshift(content.channel);
             watchedState.posts.unshift(content.items);
@@ -123,6 +124,7 @@ const init = async () => {
             watchedState.links.unshift(url);
           })
           .catch((error) => {
+            console.log(error);
             watchedState.feedDownload.error = error;
             watchedState.feedDownload.status = 'unsuccess';
           });

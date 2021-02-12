@@ -61,7 +61,7 @@ const handleFormError = (formValidationError, docElements) => {
   }
 };
 
-const handleFeedDownloadStatus = (feedStatus, docElements) => {
+const handleFeedDownloadStatus = (feedStatus, docElements, error) => {
   switch (feedStatus) {
     case 'success':
       docElements.input.readOnly = false;
@@ -75,7 +75,7 @@ const handleFeedDownloadStatus = (feedStatus, docElements) => {
       docElements.input.readOnly = false;
       docElements.submitButton.disabled = false;
       docElements.feedback.classList.add('text-danger');
-      docElements.feedback.textContent = i18next.t('downloadError');
+      docElements.feedback.textContent = error.message === 'Network Error' ? i18next.t('downloadError') : i18next.t('parsingError');
       break;
     case 'idle':
       break;
@@ -169,7 +169,7 @@ export default (state, docElements) => {
         handleFormError(value, docElements);
         break;
       case 'feedDownload.status':
-        handleFeedDownloadStatus(value, docElements);
+        handleFeedDownloadStatus(value, docElements, state.feedDownload.error);
         break;
       case 'update.status':
         handleUpdateStatus(value, docElements);
