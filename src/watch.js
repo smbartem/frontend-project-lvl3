@@ -75,7 +75,7 @@ const handleFeedDownloadStatus = (feedStatus, docElements, error) => {
       docElements.input.readOnly = false;
       docElements.submitButton.disabled = false;
       docElements.feedback.classList.add('text-danger');
-      docElements.feedback.textContent = error.message === 'Network Error' ? i18next.t('downloadError') : i18next.t('parsingError');
+      docElements.feedback.textContent = error.message === 'parsingError' ? i18next.t('parsingError') : i18next.t('downloadError');
       break;
     case 'idle':
       break;

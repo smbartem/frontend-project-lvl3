@@ -6,18 +6,22 @@ import initTranslation from './locales/initLang.js';
 import 'bootstrap';
 
 const parseRSS = (data) => {
-  const parser = new DOMParser();
-  const rssDataDocument = parser.parseFromString(data, 'text/xml');
-  const channelTitle = rssDataDocument.querySelector('title').textContent;
-  const channelDescription = rssDataDocument.querySelector('description').textContent;
-  const channel = { channelTitle, channelDescription };
-  const items = [...rssDataDocument.querySelectorAll('item')].map((el) => {
-    const itemTitle = el.querySelector('title').textContent;
-    const itemLink = el.querySelector('link').textContent;
-    const itemDescription = el.querySelector('description').textContent;
-    return { itemTitle, itemLink, itemDescription };
-  });
-  return { channel, items };
+  try {
+    const parser = new DOMParser();
+    const rssDataDocument = parser.parseFromString(data, 'text/xml');
+    const channelTitle = rssDataDocument.querySelector('title').textContent;
+    const channelDescription = rssDataDocument.querySelector('description').textContent;
+    const channel = { channelTitle, channelDescription };
+    const items = [...rssDataDocument.querySelectorAll('item')].map((el) => {
+      const itemTitle = el.querySelector('title').textContent;
+      const itemLink = el.querySelector('link').textContent;
+      const itemDescription = el.querySelector('description').textContent;
+      return { itemTitle, itemLink, itemDescription };
+    });
+    return { channel, items };
+  } catch (e) {
+    throw new Error('parsingError');
+  }
 };
 
 const downloadContent = (newLink) => {
