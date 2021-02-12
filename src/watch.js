@@ -65,12 +65,15 @@ const handleFeedDownloadStatus = (feedStatus, docElements) => {
   switch (feedStatus) {
     case 'success':
       docElements.input.readOnly = false;
+      docElements.submitButton.disabled = false;
       break;
     case 'sending':
       docElements.input.readOnly = true;
+      docElements.submitButton.disabled = true;
       break;
     case 'unsuccess':
       docElements.input.readOnly = false;
+      docElements.submitButton.disabled = false;
       docElements.feedback.classList.add('text-danger');
       docElements.feedback.textContent = i18next.t('downloadError');
       break;
