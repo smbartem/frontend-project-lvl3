@@ -3,6 +3,7 @@ import _ from 'lodash';
 import checkFormValidity from './checkFormValidity.js';
 import watch from './watch.js';
 import initTranslation from './locales/initLang.js';
+import 'bootstrap';
 
 const parseRSS = (data) => {
   const parser = new DOMParser();
