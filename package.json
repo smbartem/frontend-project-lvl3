@@ -2,7 +2,7 @@
   "name": "@hexlet/code",
   "version": "1.0.0",
   "description": "RSS Reader",
-  "main": "index.js",
+  "main": "init.js",
   "scripts": {
     "test": "@hexlet/code",
     "build": "webpack",
