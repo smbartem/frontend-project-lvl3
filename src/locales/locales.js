@@ -12,7 +12,7 @@ export default {
       succeed: 'RSS has been loaded',
       downloadError: 'This source doesn\'t contain valid RSS',
       notURL: 'This must be a valid URL',
-      viewButton: 'View',
+      viewButton: 'Preview',
       сloseButton: 'Close',
       openButton: 'Full article',
     },
