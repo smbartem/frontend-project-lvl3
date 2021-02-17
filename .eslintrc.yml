@@ -8,4 +8,4 @@ extends:
 rules:
   no-console: 0
   import/extensions: 0
-  no-param-reassign: ["error", { "props": true, "ignorePropertyModificationsForRegex": ["container", "docElements", "watchedState"] }]
+  no-param-reassign: ["error", { "props": true, "ignorePropertyModificationsForRegex": ["container", "docElements", "watchedState", "element"] }]
