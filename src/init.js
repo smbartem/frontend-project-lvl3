@@ -23,7 +23,6 @@ const parseRSS = (data, id, url) => {
       itemTitle, itemLink, itemDescription, id,
     };
   });
-  console.log({ channel, items });
   return { channel, items };
 };
 

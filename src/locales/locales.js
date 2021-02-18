@@ -1,23 +1,4 @@
 export default {
-  en: {
-    translation: {
-      title: 'RSS Reader',
-      lead: 'Start reading RSS today! It is easy, it is nicely.',
-      inputPlaceholder: 'RSS link',
-      button: 'Add',
-      exampleLink: 'Example: https://ru.hexlet.io/lessons.rss',
-      posts: 'Posts',
-      feeds: 'Feeds',
-      alreadyExists: 'Rss already exists',
-      succeed: 'Rss has been loaded',
-      downloadError: 'Network error',
-      parsingError: 'This source doesn\'t contain valid RSS',
-      notURL: 'Must be valid URL',
-      viewButton: 'Preview',
-      сloseButton: 'Close',
-      openButton: 'Full article',
-    },
-  },
   ru: {
     translation: {
       title: 'RSS-агрегатор',
@@ -35,6 +16,25 @@ export default {
       viewButton: 'Просмотр',
       сloseButton: 'Закрыть',
       openButton: 'Читать полностью',
+    },
+  },
+  en: {
+    translation: {
+      title: 'RSS Reader',
+      lead: 'Start reading RSS today! It is easy, it is nicely.',
+      inputPlaceholder: 'RSS link',
+      button: 'Add',
+      exampleLink: 'Example: https://ru.hexlet.io/lessons.rss',
+      posts: 'Posts',
+      feeds: 'Feeds',
+      alreadyExists: 'Rss already exists',
+      succeed: 'Rss has been loaded',
+      downloadError: 'Network error',
+      parsingError: 'This source doesn\'t contain valid RSS',
+      notURL: 'Must be valid URL',
+      viewButton: 'Preview',
+      сloseButton: 'Close',
+      openButton: 'Full article',
     },
   },
 };
