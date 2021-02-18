@@ -34,7 +34,7 @@ const addProxy = (link) => {
 
 const downloadContent = (newLink) => axios.get(addProxy(newLink));
 
-const updatePosts = (watchedState, timeout = 5000) => {
+/* const updatePosts = (watchedState, timeout = 5000) => {
   const requests = watchedState.feeds.map((feed) => downloadContent(feed.url)
     .then((result) => {
       const newPosts = parseRSS(result.data.contents, feed.id).items;
@@ -51,7 +51,7 @@ const updatePosts = (watchedState, timeout = 5000) => {
     watchedState.update.status = 'success';
     setTimeout(() => updatePosts(watchedState), timeout);
   });
-};
+}; */
 
 const init = () => {
   const docElements = {
@@ -100,11 +100,11 @@ const init = () => {
   initTranslation('ru').then(() => {
     const watchedState = watch(state, docElements);
     watchedState.language = 'ru';
-    updatePosts(watchedState)
+    /* updatePosts(watchedState)
       .catch((error) => {
         watchedState.update.error = error;
         watchedState.update.status = 'unsuccess';
-      });
+      }); */
     docElements.form.addEventListener('submit', (e) => {
       e.preventDefault();
       const url = new FormData(docElements.form).get('url');
