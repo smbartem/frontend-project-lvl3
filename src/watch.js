@@ -53,7 +53,6 @@ const handleFormError = (formValidationError, docElements) => {
   if (formValidationError === null) {
     docElements.input.classList.remove('is-invalid');
     docElements.feedback.classList.remove('text-danger');
-    docElements.feedback.textContent = i18next.t(formValidationError);
   } else {
     docElements.input.classList.add('is-invalid');
     docElements.feedback.classList.add('text-danger');
