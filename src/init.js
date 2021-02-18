@@ -98,9 +98,9 @@ const init = async () => {
     },
   };
 
-  initTranslation('en').then(() => {
+  initTranslation('ru').then(() => {
     const watchedState = watch(state, docElements);
-    watchedState.language = 'en';
+    watchedState.language = 'ru';
     updatePosts(watchedState)
       .catch((error) => {
         watchedState.update.error = error;
