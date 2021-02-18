@@ -23,7 +23,7 @@ export default {
       title: 'RSS-агрегатор',
       lead: 'Начните читать RSS сегодня! Это просто, это красиво.',
       inputPlaceholder: 'ссылка RSS',
-      button: 'Добавить',
+      button: 'Add',
       exampleLink: 'Пример: https://ru.hexlet.io/lessons.rss',
       posts: 'Посты',
       feeds: 'Фиды',
