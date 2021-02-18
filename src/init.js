@@ -54,25 +54,6 @@ const updatePosts = (watchedState, timeout = 5000) => {
 };
 
 const init = () => {
-  const docElements = {
-    body: document.querySelector('body'),
-    form: document.querySelector('.rss-form'),
-    feedback: document.querySelector('.feedback'),
-    submitButton: document.querySelector('.sub-btn'),
-    feeds: document.querySelector('.feeds'),
-    input: document.querySelector('.form-control'),
-    posts: document.querySelector('.posts'),
-    modalWindow: document.querySelector('[aria-labelledby="modal"]'),
-    modalWindowTitle: document.querySelector('.modal-title'),
-    modalWindowContent: document.querySelector('.modal-text'),
-    modalWindowCloseButton: document.querySelector('[data-dismiss="modal"]'),
-    modalWindowOpenButton: document.querySelector('.full-article'),
-    modalWindowBackdrop: document.querySelector('#modal-backdrop'),
-    en: document.querySelector('.en'),
-    ru: document.querySelector('.ru'),
-    data18nElements: document.querySelectorAll('[data-i18n]'),
-  };
-
   const state = {
     language: '',
     form: {
@@ -98,6 +79,24 @@ const init = () => {
   };
 
   initTranslation('ru').then(() => {
+    const docElements = {
+      body: document.querySelector('body'),
+      form: document.querySelector('.rss-form'),
+      feedback: document.querySelector('.feedback'),
+      submitButton: document.querySelector('.sub-btn'),
+      feeds: document.querySelector('.feeds'),
+      input: document.querySelector('.form-control'),
+      posts: document.querySelector('.posts'),
+      modalWindow: document.querySelector('[aria-labelledby="modal"]'),
+      modalWindowTitle: document.querySelector('.modal-title'),
+      modalWindowContent: document.querySelector('.modal-text'),
+      modalWindowCloseButton: document.querySelector('[data-dismiss="modal"]'),
+      modalWindowOpenButton: document.querySelector('.full-article'),
+      modalWindowBackdrop: document.querySelector('#modal-backdrop'),
+      en: document.querySelector('.en'),
+      ru: document.querySelector('.ru'),
+      data18nElements: document.querySelectorAll('[data-i18n]'),
+    };
     const watchedState = watch(state, docElements);
     watchedState.language = 'ru';
     updatePosts(watchedState)
