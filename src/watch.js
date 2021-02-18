@@ -53,6 +53,7 @@ const handleFormError = (formValidationError, docElements) => {
   if (formValidationError === null) {
     docElements.input.classList.remove('is-invalid');
     docElements.feedback.classList.remove('text-danger');
+    docElements.feedback.textContent = '';
   } else {
     docElements.input.classList.add('is-invalid');
     docElements.feedback.classList.add('text-danger');
@@ -118,7 +119,7 @@ const handleModalWindowStatus = (docElements, watchedState, value) => {
   }
 };
 
-const handlelanguage = (docElements, value, watchedState) => {
+const handlelanguage = (docElements, watchedState) => {
   docElements.data18nElements.forEach((element) => {
     const langKey = element.getAttribute('data-i18n');
     element.textContent = i18next.t(langKey);
@@ -167,7 +168,7 @@ export default (state, docElements) => {
         handleModalWindowStatus(docElements, watchedState, value);
         break;
       case 'language':
-        handlelanguage(docElements, value, watchedState);
+        handlelanguage(docElements, watchedState);
         break;
       default:
         break;

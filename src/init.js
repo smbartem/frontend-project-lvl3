@@ -54,7 +54,7 @@ const updatePosts = (watchedState, timeout = 5000) => {
   });
 };
 
-const init = async () => {
+const init = () => {
   const docElements = {
     body: document.querySelector('body'),
     form: document.querySelector('.rss-form'),
