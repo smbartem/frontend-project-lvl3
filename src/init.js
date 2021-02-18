@@ -1,3 +1,7 @@
+/* НЕ МОГУ ПОНЯТЬ, ПОЧЕМУ ТЕСТЫ ЧАСТИЧНО ПАДАЮТ, ЕСЛИ КЛЮЧИ ПОДСТАВЛЯЮТСЯ КОРРЕКТНЫМИ.
+ВИДИМО ЭТО СВЯЗАНО С ТЕМ, ЧТО i18next ИНИЦИИЛИЗИРУЕТСЯ МНОГО РАЗ.
+ПОДСКАЖИТЕ, ПОЖАЛУЙСТА, В КАКУЮ СТОРОНУ КОПАТЬ. */
+
 import axios from 'axios';
 import _ from 'lodash';
 import checkFormValidity from './checkFormValidity.js';
@@ -54,6 +58,25 @@ const updatePosts = (watchedState, timeout = 5000) => {
 };
 
 const init = () => {
+  const docElements = {
+    body: document.querySelector('body'),
+    form: document.querySelector('.rss-form'),
+    feedback: document.querySelector('.feedback'),
+    submitButton: document.querySelector('.sub-btn'),
+    feeds: document.querySelector('.feeds'),
+    input: document.querySelector('.form-control'),
+    posts: document.querySelector('.posts'),
+    modalWindow: document.querySelector('[aria-labelledby="modal"]'),
+    modalWindowTitle: document.querySelector('.modal-title'),
+    modalWindowContent: document.querySelector('.modal-text'),
+    modalWindowCloseButton: document.querySelector('[data-dismiss="modal"]'),
+    modalWindowOpenButton: document.querySelector('.full-article'),
+    modalWindowBackdrop: document.querySelector('#modal-backdrop'),
+    en: document.querySelector('.en'),
+    ru: document.querySelector('.ru'),
+    data18nElements: document.querySelectorAll('[data-i18n]'),
+  };
+
   const state = {
     language: '',
     form: {
@@ -79,24 +102,6 @@ const init = () => {
   };
 
   initTranslation('ru').then(() => {
-    const docElements = {
-      body: document.querySelector('body'),
-      form: document.querySelector('.rss-form'),
-      feedback: document.querySelector('.feedback'),
-      submitButton: document.querySelector('.sub-btn'),
-      feeds: document.querySelector('.feeds'),
-      input: document.querySelector('.form-control'),
-      posts: document.querySelector('.posts'),
-      modalWindow: document.querySelector('[aria-labelledby="modal"]'),
-      modalWindowTitle: document.querySelector('.modal-title'),
-      modalWindowContent: document.querySelector('.modal-text'),
-      modalWindowCloseButton: document.querySelector('[data-dismiss="modal"]'),
-      modalWindowOpenButton: document.querySelector('.full-article'),
-      modalWindowBackdrop: document.querySelector('#modal-backdrop'),
-      en: document.querySelector('.en'),
-      ru: document.querySelector('.ru'),
-      data18nElements: document.querySelectorAll('[data-i18n]'),
-    };
     const watchedState = watch(state, docElements);
     watchedState.language = 'ru';
     updatePosts(watchedState)
