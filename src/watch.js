@@ -120,7 +120,7 @@ const handleModalWindowStatus = (docElements, watchedState, value) => {
 };
 
 const handlelanguage = (docElements, watchedState) => {
-  docElements.data18nElements.forEach((element) => {
+  [...docElements.data18nElements].forEach((element) => {
     const langKey = element.getAttribute('data-i18n');
     element.textContent = i18next.t(langKey);
   });
