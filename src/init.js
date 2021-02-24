@@ -100,7 +100,7 @@ const init = () => {
       postId: '',
     },
   };
-  return initTranslation('ru').then(() => {
+  initTranslation('ru').then(() => {
     const watchedState = watch(state, docElements);
     watchedState.language = 'ru';
     updatePosts(watchedState)
@@ -155,18 +155,11 @@ const init = () => {
 
     docElements.ru.addEventListener('click', (e) => {
       e.preventDefault();
-      initTranslation('ru').then(() => {
-        watchedState.language = 'ru';
-      });
     });
 
     docElements.en.addEventListener('click', (e) => {
       e.preventDefault();
-      initTranslation('en').then(() => {
-        watchedState.language = 'en';
-      });
     });
-    return '';
   });
 };
 
