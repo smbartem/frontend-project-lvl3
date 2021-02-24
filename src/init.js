@@ -98,7 +98,7 @@ export default () => {
       postId: '',
     },
   };
-  initTranslation('ru').then(() => {
+  return initTranslation('ru').then(() => {
     const watchedState = watch(state, docElements);
     watchedState.language = 'ru';
     updatePosts(watchedState)
