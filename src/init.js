@@ -167,9 +167,8 @@ const init = () => {
         watchedState.language = 'en';
       });
     });
+    return '';
   });
-  // eslint-disable-next-line no-useless-return
-  return;
 };
 
 export default init;
