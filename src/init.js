@@ -57,7 +57,7 @@ const updatePosts = (watchedState, timeout = 5000) => {
   });
 };
 
-const init = () => {
+export default () => {
   const docElements = {
     body: document.querySelector('body'),
     form: document.querySelector('.rss-form'),
@@ -100,7 +100,7 @@ const init = () => {
       postId: '',
     },
   };
-  initTranslation('ru').then(() => {
+  return initTranslation('ru').then(() => {
     const watchedState = watch(state, docElements);
     watchedState.language = 'ru';
     updatePosts(watchedState)
@@ -168,5 +168,3 @@ const init = () => {
     });
   });
 };
-
-export default init;
