@@ -3,10 +3,11 @@
 ПОДСКАЖИТЕ, ПОЖАЛУЙСТА, В КАКУЮ СТОРОНУ КОПАТЬ. */
 
 import axios from 'axios';
+import i18next from 'i18next';
 import _ from 'lodash';
 import checkFormValidity from './checkFormValidity.js';
 import watch from './watch.js';
-import initTranslation from './locales/initLang.js';
+import resources from './locales/locales.js';
 import 'bootstrap';
 
 const parseRSS = (data, id, url) => {
@@ -100,7 +101,11 @@ export default () => {
       postId: '',
     },
   };
-  return initTranslation('ru').then(() => {
+  return i18next.init({
+    lng: 'ru',
+    debug: true,
+    resources,
+  }).then(() => {
     const watchedState = watch(state, docElements);
     watchedState.language = 'ru';
     updatePosts(watchedState)
@@ -155,14 +160,14 @@ export default () => {
 
     docElements.ru.addEventListener('click', (e) => {
       e.preventDefault();
-      initTranslation('ru').then(() => {
+      i18next.changeLanguage('ru').then(() => {
         watchedState.language = 'ru';
       });
     });
 
     docElements.en.addEventListener('click', (e) => {
       e.preventDefault();
-      initTranslation('en').then(() => {
+      i18next.changeLanguage('en').then(() => {
         watchedState.language = 'en';
       });
     });
