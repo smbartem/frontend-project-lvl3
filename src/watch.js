@@ -119,21 +119,31 @@ const handleModalWindowStatus = (docElements, watchedState, value) => {
   }
 };
 
-const handlelanguage = (docElements, watchedState) => {
-  [...docElements.data18nElements].forEach((element) => {
-    const langKey = element.getAttribute('data-i18n');
-    element.textContent = i18next.t(langKey);
-  });
+const handlelanguage = (docElements, value, watchedState) => {
+  docElements.title.textContent = i18next.t('title');
+  docElements.lead.textContent = i18next.t('lead');
+  docElements.input.placeholder = i18next.t('inputPlaceholder');
+  docElements.submitButton.textContent = i18next.t('button');
+  docElements.exampleLink.textContent = i18next.t('exampleLink');
+  docElements.modalWindowCloseButton.textContent = i18next.t('сloseButton');
+  docElements.modalWindowOpenButton.textContent = i18next.t('openButton');
   if (watchedState.feeds.length > 0) {
     generateFeeds(watchedState.feeds, docElements.feeds);
   }
   if (watchedState.posts.length > 0) {
     generatePosts(watchedState.posts, watchedState.viewedPosts, docElements.posts);
   }
-  docElements.ru.classList.toggle('text-secondary');
-  docElements.ru.classList.toggle('text-white');
-  docElements.en.classList.toggle('text-secondary');
-  docElements.en.classList.toggle('text-white');
+  if (value === 'ru') {
+    docElements.ru.classList.add('text-secondary');
+    docElements.ru.classList.remove('text-white');
+    docElements.en.classList.remove('text-secondary');
+    docElements.en.classList.add('text-white');
+  } else {
+    docElements.en.classList.add('text-secondary');
+    docElements.en.classList.remove('text-white');
+    docElements.ru.classList.remove('text-secondary');
+    docElements.ru.classList.add('text-white');
+  }
 };
 
 export default (state, docElements) => {
@@ -168,7 +178,7 @@ export default (state, docElements) => {
         handleModalWindowStatus(docElements, watchedState, value);
         break;
       case 'language':
-        handlelanguage(docElements, watchedState);
+        handlelanguage(docElements, value, watchedState);
         break;
       default:
         break;

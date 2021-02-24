@@ -1,13 +1,8 @@
-/* НЕ МОГУ ПОНЯТЬ, ПОЧЕМУ ТЕСТЫ ЧАСТИЧНО ПАДАЮТ, ЕСЛИ КЛЮЧИ ПОДСТАВЛЯЮТСЯ КОРРЕКТНЫМИ.
-ВИДИМО ЭТО СВЯЗАНО С ТЕМ, ЧТО i18next ИНИЦИИЛИЗИРУЕТСЯ МНОГО РАЗ.
-ПОДСКАЖИТЕ, ПОЖАЛУЙСТА, В КАКУЮ СТОРОНУ КОПАТЬ. */
-
 import axios from 'axios';
-import i18next from 'i18next';
 import _ from 'lodash';
 import checkFormValidity from './checkFormValidity.js';
 import watch from './watch.js';
-import resources from './locales/locales.js';
+import initTranslation from './locales/initLang.js';
 import 'bootstrap';
 
 const parseRSS = (data, id, url) => {
@@ -61,21 +56,23 @@ const updatePosts = (watchedState, timeout = 5000) => {
 export default () => {
   const docElements = {
     body: document.querySelector('body'),
+    title: document.querySelector('h1'),
+    lead: document.querySelector('.lead'),
+    exampleLink: document.querySelector('.text-muted'),
     form: document.querySelector('.rss-form'),
     feedback: document.querySelector('.feedback'),
     submitButton: document.querySelector('.sub-btn'),
     feeds: document.querySelector('.feeds'),
     input: document.querySelector('.form-control'),
     posts: document.querySelector('.posts'),
-    modalWindow: document.querySelector('[aria-labelledby="modal"]'),
+    modalWindow: document.querySelector('[aria-labelledby="exampleModal"]'),
     modalWindowTitle: document.querySelector('.modal-title'),
     modalWindowContent: document.querySelector('.modal-text'),
-    modalWindowCloseButton: document.querySelector('[data-dismiss="modal"]'),
+    modalWindowCloseButton: document.querySelector('.btn-secondary'),
     modalWindowOpenButton: document.querySelector('.full-article'),
     modalWindowBackdrop: document.querySelector('#modal-backdrop'),
     en: document.querySelector('.en'),
     ru: document.querySelector('.ru'),
-    data18nElements: document.querySelectorAll('[data-i18n]'),
   };
 
   const state = {
@@ -101,11 +98,7 @@ export default () => {
       postId: '',
     },
   };
-  return i18next.init({
-    lng: 'ru',
-    debug: true,
-    resources,
-  }).then(() => {
+  initTranslation('ru').then(() => {
     const watchedState = watch(state, docElements);
     watchedState.language = 'ru';
     updatePosts(watchedState)
@@ -160,14 +153,14 @@ export default () => {
 
     docElements.ru.addEventListener('click', (e) => {
       e.preventDefault();
-      i18next.changeLanguage('ru').then(() => {
+      initTranslation('ru').then(() => {
         watchedState.language = 'ru';
       });
     });
 
     docElements.en.addEventListener('click', (e) => {
       e.preventDefault();
-      i18next.changeLanguage('en').then(() => {
+      initTranslation('en').then(() => {
         watchedState.language = 'en';
       });
     });
