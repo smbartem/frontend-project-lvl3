@@ -166,6 +166,7 @@ const init = () => {
         watchedState.language = 'en';
       });
     });
+    return '';
   });
 };
 
