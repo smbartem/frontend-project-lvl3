@@ -168,6 +168,8 @@ const init = () => {
       });
     });
   });
+  // eslint-disable-next-line no-useless-return
+  return;
 };
 
 export default init;
