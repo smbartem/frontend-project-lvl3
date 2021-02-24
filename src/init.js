@@ -155,10 +155,16 @@ const init = () => {
 
     docElements.ru.addEventListener('click', (e) => {
       e.preventDefault();
+      initTranslation('ru').then(() => {
+        watchedState.language = 'ru';
+      });
     });
 
     docElements.en.addEventListener('click', (e) => {
       e.preventDefault();
+      initTranslation('en').then(() => {
+        watchedState.language = 'en';
+      });
     });
   });
 };
