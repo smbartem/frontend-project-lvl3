@@ -28,8 +28,9 @@ const parseRSS = (data, id, url) => {
 
 const addProxy = (link) => {
   const proxy = 'https://hexlet-allorigins.herokuapp.com/get?disableCache=true&url=';
-  const newUrl = new URL(`${proxy}${link}`);
-  return newUrl.href;
+  const urlObject = new URL(proxy);
+  urlObject.searchParams.set('url', link);
+  return urlObject.href;
 };
 
 const downloadContent = (newLink) => axios.get(addProxy(newLink));
