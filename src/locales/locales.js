@@ -8,7 +8,7 @@ export default {
       exampleLink: 'Пример: https://ru.hexlet.io/lessons.rss',
       posts: 'Посты',
       feeds: 'Фиды',
-      alreadyExists: 'RSS уже добавлен',
+      alreadyExists: 'RSS уже существует',
       succeed: 'RSS успешно загружен',
       downloadError: 'Ошибка сети',
       parsingError: 'Ресурс не содержит валидный RSS',
