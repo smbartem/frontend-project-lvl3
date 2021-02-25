@@ -3,6 +3,7 @@ import resources from './locales.js';
 
 const initTranslation = (language) => i18next.init({
   lng: language,
+  fallbackLng: 'ru',
   debug: true,
   resources,
 });
